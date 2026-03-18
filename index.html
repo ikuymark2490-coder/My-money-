@@ -724,16 +724,53 @@ function startVoiceRecognition() {
 function stopVoice() { document.getElementById('voiceOverlay').style.display = 'none'; if(recognition) try{ recognition.stop(); }catch(e){} }
 function parseVoiceData(text) {
   var pType = 'expense', pAmt = '', pCat = '', pDetail = text;
-  var amtM = text.match(/(\d+)/); if(amtM){ pAmt = amtM[0]; pDetail = pDetail.replace(pAmt,'').replace(/บาท|บ\./g,'').trim(); }
+  
+  // 💡 1. ปรับ Regex ให้ดึง "ตัวเลขทั้งหมด" รวมถึงลูกน้ำและจุดทศนิยม (เช่น 2,000 หรือ 150.50)
+  var amtM = text.match(/(\d+(?:,\d+)*(?:\.\d+)?)/); 
+  
+  if(amtM){ 
+    // แปลง "2,000" เป็น "2000" เพื่อให้ช่องใส่ตัวเลข (input type="number") เข้าใจ
+    pAmt = amtM[0].replace(/,/g, ''); 
+    
+    // ลบตัวเลข (แบบมีลูกน้ำ/ทศนิยม) ออกจากข้อความรายละเอียด
+    pDetail = pDetail.replace(amtM[0], '').replace(/บาท|บ\./g, '').trim(); 
+  }
+  
+  // 💡 2. ตรวจสอบประเภท
   if(text.match(/รายรับ|ได้เงิน|รับเงิน|เงินเดือน|โบนัส/)){ pType = 'income'; }
-  var kw = { 'อาหารและเครื่องดื่ม':/ข้าว|อาหาร|กิน|น้ำ|กาแฟ|ชา|ขนม/, 'เดินทาง/น้ำมัน':/รถ|น้ำมัน|เดินทาง|แท็กซี่/, 'ช้อปปิ้ง':/ซื้อ|เสื้อผ้า|รองเท้า/, 'ความบันเทิง':/หนัง|เกม|คอนเสิร์ต/, 'เงินเดือน':/เงินเดือน|ค่าจ้าง/ };
-  Object.keys(kw).forEach(function(cat){ if(kw[cat].test(text)){ pCat = cat; if(cat==='เงินเดือน') pType='income'; } });
-  typeInput.value = pType; updateCategoryOptions();
+  
+  // 💡 3. ตรวจสอบหมวดหมู่ (เพิ่ม Keyword ให้ฉลาดขึ้นอีกนิด)
+  var kw = { 
+    'อาหารและเครื่องดื่ม': /ข้าว|อาหาร|กิน|น้ำ|กาแฟ|ชา|ขนม|บุฟเฟต์|ชาบู/, 
+    'เดินทาง/น้ำมัน': /รถ|น้ำมัน|เดินทาง|แท็กซี่|วิน|bts|mrt|ทางด่วน/, 
+    'ช้อปปิ้ง': /ซื้อ|เสื้อผ้า|รองเท้า|ของ|กระเป๋า|เอฟ/, 
+    'ความบันเทิง': /หนัง|เกม|คอนเสิร์ต|ตั๋ว|netfilx/, 
+    'เงินเดือน': /เงินเดือน|ค่าจ้าง|เงินออก/,
+    'ค่าที่พัก/บ้าน': /บ้าน|ห้อง|คอนโด|ค่าเช่า/,
+    'ค่าน้ำ/ไฟ/เน็ต': /น้ำ|ไฟ|เน็ต|โทรศัพท์|บิล/
+  };
+  
+  Object.keys(kw).forEach(function(cat){ 
+    if(kw[cat].test(text)){ 
+      pCat = cat; 
+      if(cat === 'เงินเดือน') pType = 'income'; 
+    } 
+  });
+  
+  // 💡 4. นำค่าไปใส่ในฟอร์ม
+  typeInput.value = pType; 
+  updateCategoryOptions();
   if(pCat){ categoryInput.value = pCat; }
-  document.getElementById('amountInput').value = pAmt;
+  
+  // ป้องกันการเอาค่าว่าง หรือ NaN ไปใส่ในช่อง input type="number"
+  document.getElementById('amountInput').value = pAmt || ''; 
+  
+  // จัดเรียงข้อความรายละเอียดให้สะอาดขึ้น (ลบช่องว่างส่วนเกิน)
   if(pDetail) document.getElementById('detailInput').value = pDetail.replace(/\s+/g,' ').trim();
+  
   alert('AI ได้ยินว่า: "' + text + '"\nกรอกข้อมูลให้แล้วครับ ตรวจสอบแล้วกดบันทึกได้เลย!');
 }
+
 
 // ==================== AUTO RECURRING ====================
 function processRecurringTransactions() {
