@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>เงินฉัน - บัญชีส่วนตัว</title>
+  
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99%E0%B8%89%E0%B8%B1%E0%B8%99%22%2C%22short_name%22%3A%22%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99%E0%B8%89%E0%B8%B1%E0%B8%99%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%234f46e5%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ctext%20y%3D%27.9em%27%20font-size%3D%2790%27%3E%F0%9F%92%B0%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    :root {
+      --primary: #4f46e5; --primary-light: #e0e7ff;
+      --success: #10b981; --danger: #ef4444; --warning: #f59e0b; 
+      --bg-color: #f8fafc; --surface: #ffffff;
+      --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+      --ai-gradient: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%);
+    }
+
+    body.dark-theme {
+      --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
+      --text-muted: #94a3b8; --border: #334155; --primary-light: #312e81;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 80px; transition: background-color 0.2s, color 0.2s; overflow-x: hidden; }
+
+    header { background-color: var(--surface); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
+    .header-left { display: flex; flex-direction: column; }
+    header h1 { font-size: 1.25rem; color: var(--primary); margin: 0; font-weight: bold; line-height: 1.2; }
+    .header-account-badge { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; cursor: pointer; }
+    .header-account-badge svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+    
+    .header-icons { display: flex; gap: 12px; align-items: center; }
+    .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: 0.2s;}
+    .icon-btn:hover { color: var(--primary); }
+    .icon-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .container { padding: 1rem; max-width: 600px; margin: 0 auto; }
+    .card { background: var(--surface); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+    .card-title { font-size: 1.1rem; color: var(--text-main); margin: 0; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .card-title svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .tab-content { display: none; animation: fadeIn 0.2s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .chart-tabs { display: flex; gap: 4px; background: var(--bg-color); padding: 4px; border-radius: 8px; }
+    .chart-tab { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; font-size: 0.85rem; border-radius: 6px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: 0.2s; flex: 1; }
+    .chart-tab.active { background: var(--surface); color: var(--primary); font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .chart-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; justify-content: space-around; padding: 0.75rem 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0.75rem); }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: color 0.2s; width: 25%; }
+    .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active svg { fill: var(--primary-light); }
+
+    label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 500; }
+    input, select, textarea { width: 100%; padding: 0.9rem 1rem; margin-bottom: 1.2rem; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background-color: var(--bg-color); color: var(--text-main); transition: 0.2s; appearance: none; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background-color: var(--surface); box-shadow: 0 0 0 3px var(--primary-light); }
+    
+    button { width: 100%; padding: 1rem; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;}
+    button svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-outline:active { background: var(--bg-color); transform: scale(0.98); }
+    .btn-danger-outline { color: var(--danger); border: 1px solid var(--danger); background: transparent; }
+    .btn-ai { background: var(--ai-gradient); color: white; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.2); }
+    .btn-small { padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; }
+    
+    .row { display: flex; gap: 12px; }
+    .col { flex: 1; }
+
+    .balance-box { text-align: center; padding: 1rem 0; }
+    .balance-amount { font-size: 2.8rem; font-weight: bold; margin: 0.5rem 0; letter-spacing: -1px; }
+    .text-success { color: var(--success); } .text-danger { color: var(--danger); }
+    
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+    .summary-card { background: var(--bg-color); padding: 1rem; border-radius: 12px; text-align: center; }
+    .summary-label { font-size: 0.8rem; color: var(--text-muted); }
+    .summary-val { font-size: 1.2rem; font-weight: bold; margin-top: 0.3rem; }
+
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border); }
+    .list-item:last-child { border-bottom: none; }
+    .item-title { font-weight: 600; font-size: 1rem; color: var(--text-main); }
+    .item-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .item-amount { font-weight: bold; font-size: 1rem; text-align: right; }
+    .item-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
+    .item-actions .btn-small { padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-weight: normal; }
+
+    .progress-bg { background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .progress-bar { height: 100%; background: var(--primary); transition: width 0.3s ease; }
+    .progress-bar.warning { background: var(--warning); }
+    .progress-bar.danger { background: var(--danger); }
+    .progress-bar.success { background: var(--success); } 
+    
+    .empty-msg { text-align: center; color: var(--text-muted); padding: 2rem 0; font-size: 0.9rem; }
+    .checkbox-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; cursor: pointer; }
+    .checkbox-wrapper input { width: auto; margin: 0; width: 18px; height: 18px; accent-color: var(--primary); }
+    .custom-input-box { display: flex; gap: 8px; margin-top: -0.8rem; margin-bottom: 1.2rem; animation: fadeIn 0.2s ease; }
+    .custom-input-box input { margin-bottom: 0; }
+
+    /* AI Box & Loaders */
+    .ai-box { background: var(--bg-color); border: 1px solid var(--border); border-left: 4px solid #ec4899; padding: 1.2rem; border-radius: 12px; margin-top: 1rem; display: none; animation: fadeIn 0.3s ease; text-align: left; }
+    .ai-rank { font-size: 1.2rem; font-weight: bold; color: #ec4899; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; }
+    .ai-text { font-size: 0.9rem; line-height: 1.6; color: var(--text-main); }
+    .ai-highlight { font-weight: bold; color: var(--danger); }
+    .ai-list { margin-top: 0.5rem; padding-left: 1.2rem; margin-bottom: 0.5rem; }
+    .ai-list li { margin-bottom: 4px; }
+
+    .loader-container { display: none; text-align: center; padding: 2rem 0; animation: fadeIn 0.2s ease; }
+    .loader-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 0 auto 10px auto; max-width: 200px; }
+    .loader-progress { width: 0%; height: 100%; background: var(--ai-gradient); animation: loadBar 1s ease-in-out forwards; }
+    @keyframes loadBar { 0% { width: 0%; } 100% { width: 100%; } }
+
+    /* Settings Menu */
+    .profile-card { display: flex; align-items: center; gap: 1rem; padding: 1.2rem; background: var(--bg-color); border-radius: 12px; margin-bottom: 1.5rem; }
+    .profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+    .profile-avatar svg { width: 28px; height: 28px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .profile-info { flex: 1; }
+    .profile-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;}
+    .profile-name { font-size: 1.1rem; font-weight: bold; margin: 0; color: var(--text-main); }
+    .rank-badge { font-size: 0.7rem; background: var(--ai-gradient); color: white; padding: 2px 8px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;}
+    .rank-badge svg { width: 12px; height: 12px; }
+    .profile-bio { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+    .settings-menu { display: flex; flex-direction: column; gap: 8px; }
+    .settings-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-color); border-radius: 10px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+    .settings-item:hover { border-color: var(--border); background: var(--surface); }
+    .settings-item-left { display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 0.95rem; color: var(--text-main); }
+    .settings-item-left svg { width: 20px; height: 20px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .settings-item-right svg { width: 18px; height: 18px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    
+    .back-nav { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; cursor: pointer; width: fit-content; padding: 4px 8px; border-radius: 6px;}
+    .back-nav:hover { color: var(--primary); background: var(--bg-color); }
+    .back-nav svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .filter-box { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .filter-box input { margin-bottom: 0; padding: 0.6rem 1rem; font-size: 0.9rem; }
+    .search-input-wrapper { position: relative; flex: 2; }
+    .search-input-wrapper svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+    .search-input-wrapper input { padding-left: 32px; width: 100%; }
+    
+    /* PIN Lock */
+    .pin-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .pin-header { text-align: center; margin-bottom: 2rem; color: var(--text-main); }
+    .pin-header svg { width: 48px; height: 48px; stroke: var(--primary); fill: none; stroke-width: 1.5; margin-bottom: 1rem; }
+    .pin-dots { display: flex; gap: 16px; margin-bottom: 3rem; justify-content: center; }
+    .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); transition: 0.2s; }
+    .pin-dot.filled { background: var(--primary); border-color: var(--primary); }
+    .pin-dot.error { background: var(--danger); border-color: var(--danger); }
+    .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 300px; width: 100%; padding: 0 2rem; }
+    .pin-btn { width: 64px; height: 64px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); font-size: 1.5rem; font-weight: bold; color: var(--text-main); display: flex; justify-content: center; align-items: center; cursor: pointer; margin: 0 auto; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .pin-btn:active { background: var(--border); transform: scale(0.95); }
+    .pin-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .pin-shake { animation: shake 0.4s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+
+    /* Account List & Switcher */
+    .account-card { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); padding: 1rem; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+    .account-card:hover { border-color: var(--primary); }
+    .account-card.active-acc { border-color: var(--primary); background: var(--primary-light); }
+    .acc-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-color); display: flex; align-items: center; justify-content: center; margin-right: 12px; color: var(--primary); }
+    .acc-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .del-acc-btn { padding: 6px; color: var(--danger); background: transparent; border: none; cursor: pointer; }
+    .del-acc-btn:hover { background: rgba(239,68,68,0.1); border-radius: 50%; }
+    .del-acc-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    
+    /* Premium Success Animation */
+    .success-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+    .success-overlay.show { opacity: 1; }
+    .check-wrapper { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 1.5rem 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid rgba(255,255,255,0.4); }
+    body.dark-theme .check-wrapper { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.1); }
+    .success-overlay.show .check-wrapper { transform: scale(1); }
+    .circular-chart { display: block; margin: 0 auto; max-width: 56px; max-height: 56px; }
+    .circle-bg { fill: none; stroke: var(--border); stroke-width: 3.8; }
+    .circle { fill: none; stroke-width: 2.8; stroke-linecap: round; animation: drawProgress 0.6s ease-out forwards; }
+    .check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: drawStroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards; }
+    @keyframes drawProgress { 0% { stroke-dasharray: 0 100; } }
+    @keyframes drawStroke { 100% { stroke-dashoffset: 0; } }
+
+    /* Voice UI */
+    .voice-btn { width: 100%; padding: 1rem; background: var(--primary-light); color: var(--primary); border: 2px dashed var(--primary); border-radius: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-bottom: 1.5rem; transition: 0.2s; }
+    .voice-btn:hover { background: #d0d7ff; }
+    .voice-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .voice-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; display: none; animation: fadeIn 0.2s; }
+    .voice-ring { width: 100px; height: 100px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; animation: pulse 1.5s infinite; margin-bottom: 2rem; }
+    .voice-ring svg { width: 40px; height: 40px; stroke: currentColor; fill: none; stroke-width: 2; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(79, 70, 229, 0); } 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); } }
+    .voice-guide { background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 12px; color: white; text-align: center; max-width: 80%; line-height: 1.5; font-size: 0.9rem;}
+  </style>
+</head>
+<body>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+      self.addEventListener('install', e => self.skipWaiting());
+      self.addEventListener('activate', e => self.clients.claim());
+      self.addEventListener('fetch', e => {
+        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+      });
+    `;
+    const blob = new Blob([swCode], {type: 'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  }
+</script>
+
+<div id="errorFallback" style="display: none; padding: 2rem; text-align: center; margin-top: 15vh;">
+  <h2 style="color: var(--danger); margin-bottom: 1rem;">⚠️ ระบบขัดข้อง</h2>
+  <p style="color: var(--text-muted); margin-bottom: 2rem;">ข้อมูลเดิมในเครื่องเสียหายหรือเข้ากันไม่ได้กับเวอร์ชันใหม่</p>
+  <button class="btn-primary" style="margin-bottom: 1rem;" onclick="location.reload()">ลองรีเฟรชอีกครั้ง</button>
+  <button class="btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="hardResetApp()">ล้างข้อมูลทั้งหมด (เริ่มใหม่)</button>
+  <script>
+    function hardResetApp() {
+      if(confirm('ข้อมูลทั้งหมดจะถูกลบเพื่อรีเซ็ตระบบ คุณแน่ใจหรือไม่?')) { localStorage.clear(); location.reload(); }
+    }
+  </script>
+</div>
+
+<div id="successOverlay" class="success-overlay">
+  <div class="check-wrapper">
+    <svg viewBox="0 0 36 36" class="circular-chart">
+      <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+      <path class="circle" stroke="var(--success)" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+      <path class="check" stroke="var(--success)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" d="M11 18.5 l4.5 4.5 l9.5 -9.5" />
+    </svg>
+    <h2 style="margin: 12px 0 0 0; color: var(--text-main); font-size: 1.05rem; font-weight: 600;">เรียบร้อย!</h2>
+  </div>
+</div>
+
+<div id="voiceOverlay" class="voice-overlay">
+  <div class="voice-ring">
+    <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+  </div>
+  <h2 style="color: white; margin-bottom: 1rem;" id="voiceStatusText">กำลังฟัง...</h2>
+  <div class="voice-guide">
+    💡 <b>เคล็ดลับ:</b> ลองพูด<br>"[ประเภท] [หมวดหมู่] [รายละเอียด] [จำนวนเงิน]"<br><br>
+    <i>เช่น: "รายจ่าย หมวดอาหาร ข้าวผัด 50 บาท"</i><br><br>
+    (ไม่บังคับ พูดปกติก็ได้ครับ)
+  </div>
+  <button class="btn-outline" style="color: white; border-color: white; margin-top: 2rem; width: auto; padding: 0.5rem 2rem;" onclick="stopVoice()">ยกเลิก</button>
+</div>
+
+<div id="pinScreen" class="pin-overlay" style="display: none;">
+  <div class="pin-header">
+    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    <h2 id="pinTitleText">ใส่รหัส PIN</h2>
+  </div>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pressPin('1')">1</button>
+    <button class="pin-btn" onclick="pressPin('2')">2</button>
+    <button class="pin-btn" onclick="pressPin('3')">3</button>
+    <button class="pin-btn" onclick="pressPin('4')">4</button>
+    <button class="pin-btn" onclick="pressPin('5')">5</button>
+    <button class="pin-btn" onclick="pressPin('6')">6</button>
+    <button class="pin-btn" onclick="pressPin('7')">7</button>
+    <button class="pin-btn" onclick="pressPin('8')">8</button>
+    <button class="pin-btn" onclick="pressPin('9')">9</button>
+    <div></div>
+    <button class="pin-btn" onclick="pressPin('0')">0</button>
+    <button class="pin-btn" onclick="deletePin()" style="background: transparent; border: none; box-shadow: none;">
+      <svg viewBox="0 0 24 24"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+    </button>
+  </div>
+</div>
+
+<div id="appContainer" style="display: none;">
+  <header>
+    <div class="header-left">
+      <h1 id="headerTitle">เงินฉัน</h1>
+      <div class="header-account-badge" onclick="openSubSettings('settings-accounts')">
+        <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+        <span id="headerAccountName">กำลังโหลดบัญชี...</span>
+        <svg viewBox="0 0 24 24" style="width:10px; height:10px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+    </div>
+    <div class="header-icons">
+      <button class="icon-btn" onclick="openSettings()" aria-label="ตั้งค่า">
+        <svg><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="card balance-box">
+        <div style="font-size: 0.9rem; color: var(--text-muted);">เงินคงเหลือสุทธิ (พร้อมใช้)</div>
+        <div class="balance-amount" id="balanceDisplay">0.00</div>
+        
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">รายรับเดือนนี้</div>
+            <div class="summary-val text-success" id="incomeDisplay">0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">รายจ่ายเดือนนี้</div>
+            <div class="summary-val text-danger" id="expenseDisplay">0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="goalCardDisplay" style="display: none;">
+        <div class="card-header" style="padding-bottom: 0.5rem; border-bottom: none;">
+          <h2 class="card-title" style="color: var(--success);">
+            <svg viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h2v-2h4v2h2v-2c2.7-1.1 4-2.5 4-4.5 0-1.5-.5-2-1.5-2.5C19.5 10.5 22 9 22 7.5 22 5.5 20.5 5 19 5Z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></svg>
+            เป้าหมาย: <span id="dashGoalName"></span>
+          </h2>
+        </div>
+        <div class="progress-bg" style="height: 12px; margin-top: 0;"><div class="progress-bar success" id="dashGoalProgress" style="width: 0%;"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:6px; color: var(--text-muted); font-weight: 500;">
+          <span>ออมแล้ว: <span id="dashGoalCurrent" style="color: var(--text-main);">0</span></span>
+          <span>เป้าหมาย: <span id="dashGoalTarget">0</span></span>
+        </div>
+        <div id="dashGoalCompleteContainer" style="display: none; margin-top: 1rem;">
+          <button class="btn-primary" style="background: var(--warning); color: #fff;" onclick="completeGoal()">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> ยืนยันรับความสำเร็จ!
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title" id="chartTitle">
+            <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg> สัดส่วนรายจ่าย
+          </h2>
+          <div class="chart-tabs">
+            <button class="chart-tab active" id="btnDoughnut" onclick="setChartType('doughnut')">วงกลม</button>
+            <button class="chart-tab" id="btnLine" onclick="setChartType('line')">กราฟ</button>
+          </div>
+        </div>
+        <div style="position: relative; height: 220px; width: 100%; display: flex; justify-content: center; align-items: center;">
+          <div id="chartFallbackMsg" style="display:none; text-align:center; color:var(--text-muted); font-size:0.9rem; padding-top:80px;">
+            ⚠️ ไม่สามารถโหลดกราฟได้<br><small>(รอเชื่อมต่ออินเทอร์เน็ต)</small>
+          </div>
+          <canvas id="mainChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card" id="aiCard">
+        <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+          <h2 class="card-title" style="color: #ec4899;">
+            <svg viewBox="0 0 24 24"><rect width="18" height="14" x="3" y="7" rx="2"></rect><path d="M12 7V3"></path><circle cx="12" cy="3" r="1"></circle><path d="M9 13v.01"></path><path d="M15 13v.01"></path><path d="M10 17h4"></path></svg>
+            AI วิเคราะห์การเงิน
+          </h2>
+        </div>
+        <button class="btn-ai" id="btnRunAI" style="margin-top: 1rem;" onclick="runAIEvaluation()">
+          <svg viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
+            เริ่มประเมินบัญชีนี้
+        </button>
+        <div id="aiLoading" class="loader-container">
+          <div id="loaderBarWrapper"></div> 
+          <div style="font-size: 0.85rem; color: var(--text-muted);">AI กำลังประมวลผล...</div>
+        </div>
+        <div id="aiResultBox" class="ai-box">
+          <div class="ai-rank" id="aiRankDisplay">ยศ: -</div>
+          <div class="ai-text" id="aiTextDisplay"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-add" class="tab-content">
+      <div class="card" style="padding-top: 1rem;">
+        
+        <div class="chart-tabs" style="margin-bottom: 1rem;">
+          <button class="chart-tab active" id="btnAddNormal" onclick="switchAddTab('normal')">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> บันทึกปกติ
+          </button>
+          <button class="chart-tab" id="btnAddSaving" onclick="switchAddTab('saving')">
+            <svg viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h2v-2h4v2h2v-2c2.7-1.1 4-2.5 4-4.5 0-1.5-.5-2-1.5-2.5C19.5 10.5 22 9 22 7.5 22 5.5 20.5 5 19 5Z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></svg> ออมเงิน
+          </button>
+        </div>
+
+        <div id="addNormalSection">
+          
+          <button class="voice-btn" type="button" onclick="startVoiceRecognition()">
+            <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            จดบัญชีด้วยเสียง (AI)
+          </button>
+
+          <form id="transactionForm">
+            <h3 id="formTitle" style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-main);">บันทึกรายการใหม่</h3>
+            <div class="row">
+              <div class="col">
+                <label>ประเภท</label>
+                <select id="typeInput" required>
+                  <option value="expense">รายจ่าย</option>
+                  <option value="income">รายรับ</option>
+                </select>
+              </div>
+              <div class="col">
+                <label>หมวดหมู่</label>
+                <select id="categoryInput" required></select>
+              </div>
+            </div>
+            
+            <div id="customCatBox" class="custom-input-box" style="display: none;">
+              <input type="text" id="customCatName" placeholder="ตั้งชื่อหมวดหมู่..." lang="th" dir="auto">
+              <button type="button" class="btn-primary btn-small" onclick="saveCustomCategory('add')">ยืนยัน</button>
+            </div>
+
+            <label>รายละเอียด</label>
+            <input type="text" id="detailInput" placeholder="ระบุรายละเอียด..." lang="th" dir="auto" required />
+            
+            <div class="row">
+              <div class="col">
+                <label>จำนวนเงิน (บาท)</label>
+                <input type="number" id="amountInput" placeholder="0.00" step="0.01" min="0" required/>
+              </div>
+              <div class="col">
+                <label>วันที่</label>
+                <input type="date" id="dateInput" required/>
+              </div>
+            </div>
+
+            <label class="checkbox-wrapper">
+              <input type="checkbox" id="recurringInput">
+              <span>รายการประจำ (เพิ่ม Auto ทุกเดือน)</span>
+            </label>
+            
+            <button type="submit" class="btn-primary" id="saveBtn">
+              <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> บันทึกข้อมูล
+            </button>
+            <button type="button" class="btn-outline" id="cancelEditBtn" style="display:none; margin-top: 10px;" onclick="cancelEdit()">ยกเลิกการแก้ไข</button>
+          </form>
+        </div>
+
+        <div id="addSavingSection" style="display: none;">
+          <div id="goalSetupUI" style="display: none;">
+            <div style="text-align: center; color: var(--success); margin-bottom: 1rem;">
+              <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h2v-2h4v2h2v-2c2.7-1.1 4-2.5 4-4.5 0-1.5-.5-2-1.5-2.5C19.5 10.5 22 9 22 7.5 22 5.5 20.5 5 19 5Z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></svg>
+              <h3 style="margin-top: 0.5rem; color: var(--text-main);">ตั้งเป้าหมายออมเงิน</h3>
+            </div>
+            <label>ชื่อเป้าหมาย</label>
+            <input type="text" id="goalNameInput" placeholder="พิมพ์ชื่อเป้าหมายที่นี่..." lang="th" dir="auto">
+            <label>ยอดเงินที่ต้องการ (บาท)</label>
+            <input type="number" id="goalAmountInput" placeholder="0" min="0" step="1">
+            <button class="btn-primary" style="background: var(--success);" onclick="saveGoalSettings()">สร้างกระปุกออมสิน</button>
+            <button class="btn-outline btn-danger-outline" id="cancelGoalBtn" style="display:none; margin-top: 10px;" onclick="clearGoalSettings()">ยกเลิกเป้าหมายนี้</button>
+          </div>
+
+          <div id="goalProgressUI" style="display: none;">
+            <div style="background: var(--bg-color); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <strong style="color: var(--success);" id="savingTabGoalName">เป้าหมาย</strong>
+                <button class="btn-small btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" onclick="editGoalSettings()">แก้ไข</button>
+              </div>
+              <div class="progress-bg" style="height: 10px; margin-bottom: 6px;"><div class="progress-bar success" id="savingTabGoalProgress" style="width: 0%;"></div></div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                <span>ออมแล้ว: <span id="savingTabGoalCurrent" style="font-weight: bold; color: var(--text-main);">0</span></span>
+                <span>เป้า: <span id="savingTabGoalTarget">0</span></span>
+              </div>
+              <div id="savingTabGoalCompleteContainer" style="display: none; margin-top: 1rem;">
+                <button class="btn-primary" style="background: var(--warning); color: #fff; width: 100%;" onclick="completeGoal()">🎉 ยืนยันรับความสำเร็จ!</button>
+              </div>
+            </div>
+
+            <div id="savingAddForm">
+              <h3 style="font-size: 1rem; margin-bottom: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem; text-align: center;">หยอดกระปุกเพิ่ม 🪙</h3>
+              <label>รายละเอียด</label>
+              <input type="text" id="savingDetailInput" placeholder="หยอดกระปุก..." value="หยอดกระปุก" lang="th" dir="auto" required>
+              <div class="row">
+                <div class="col">
+                  <label>จำนวนเงินออม</label>
+                  <input type="number" id="savingAmountInput" placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                <div class="col">
+                  <label>วันที่</label>
+                  <input type="date" id="savingDateInput" required>
+                </div>
+              </div>
+              <button class="btn-primary" style="background: var(--success);" id="saveSavingBtn" onclick="saveSavingTransaction()">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> บันทึกการออม
+              </button>
+              <button type="button" class="btn-outline" id="cancelSavingEditBtn" style="display:none; margin-top: 10px;" onclick="cancelSavingEdit()">ยกเลิก</button>
+            </div>
+          </div>
+        </div> 
+      </div>
+    </div>
+
+    <div id="tab-history" class="tab-content">
+      <div class="card">
+        <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 1rem;">
+          <h2 class="card-title">ประวัติรายการ</h2>
+          <div class="chart-tabs">
+            <button class="chart-tab active" id="btnHistNormal" onclick="switchHistTab('normal')">ปกติ</button>
+            <button class="chart-tab" id="btnHistSaving" onclick="switchHistTab('saving')">ออมสิน</button>
+          </div>
+        </div>
+        
+        <div class="filter-box">
+          <div class="search-input-wrapper">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchHistoryInput" placeholder="ค้นหา..." lang="th" dir="auto" oninput="renderHistoryList()">
+          </div>
+          <div style="flex: 1;">
+            <input type="month" id="monthHistoryInput" onchange="renderHistoryList()">
+          </div>
+        </div>
+
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+    <div id="tab-budget" class="tab-content">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">ตั้งค่างบประมาณรายเดือน</h2></div>
+        <div class="row">
+          <div class="col">
+            <select id="budgetCatInput" required></select>
+          </div>
+          <div class="col">
+            <input type="number" id="budgetAmtInput" placeholder="จำนวนเงิน" min="0" step="1">
+          </div>
+        </div>
+
+        <div id="customBudgetCatBox" class="custom-input-box" style="display: none;">
+          <input type="text" id="customBudgetCatName" placeholder="ตั้งชื่อหมวดหมู่..." lang="th" dir="auto">
+          <button type="button" class="btn-primary btn-small" onclick="saveCustomCategory('budget')">ยืนยัน</button>
+        </div>
+
+        <button class="btn-outline" onclick="saveBudget()" style="margin-bottom: 1.5rem;">เพิ่มงบประมาณ</button>
+        <div id="budgetList"></div>
+      </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+      <div id="settings-main">
+        <h2 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">ตั้งค่า</h2>
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name-row">
+              <h3 class="profile-name" id="displayProfileName">ผู้ใช้งาน</h3>
+              <span class="rank-badge" id="displayProfileRank" style="display: none;">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span id="rankBadgeText"></span>
+              </span>
+            </div>
+            <p class="profile-bio" id="displayProfileBio">เป้าหมายทางการเงิน...</p>
+          </div>
+        </div>
+
+        <div class="settings-menu">
+          <div class="settings-item" onclick="openSubSettings('settings-accounts')" style="border-left: 3px solid var(--primary);">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+              จัดการบัญชี & สลับบัญชี
+            </div>
+            <div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+          </div>
+
+          <div class="settings-item" onclick="openSubSettings('settings-edit')">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              แก้ไขโปรไฟล์
+            </div>
+            <div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+          </div>
+
+          <div class="settings-item" onclick="openSubSettings('settings-pin')">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              รหัสล็อค PIN
+            </div>
+            <div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+          </div>
+
+          <label class="settings-item">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              โหมดกลางคืน (Dark Mode)
+            </div>
+            <div class="checkbox-wrapper" style="margin: 0;">
+              <input type="checkbox" id="themeToggle" onchange="toggleTheme()" style="width: 20px; height: 20px;">
+            </div>
+          </label>
+
+          <div class="settings-item" onclick="exportData()">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              ส่งออก CSV
+            </div>
+          </div>
+
+          <div class="settings-item" onclick="document.getElementById('csvImportInput').click()">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              นำเข้า CSV
+            </div>
+          </div>
+          <input type="file" id="csvImportInput" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
+
+        </div>
+      </div>
+
+      <div id="settings-edit" style="display: none;">
+        <div class="back-nav" onclick="closeSubSettings()">
+          <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> กลับ
+        </div>
+        <div class="card" style="box-shadow: none; padding: 0;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">แก้ไขโปรไฟล์</h2>
+          <label>ชื่อผู้ใช้งาน</label>
+          <input type="text" id="profileName" placeholder="ใส่ชื่อของคุณ..." lang="th" dir="auto">
+          <label>คำอธิบายสั้นๆ</label>
+          <textarea id="profileBio" rows="3" placeholder="เป้าหมายปีนี้..." lang="th" dir="auto"></textarea>
+          <button class="btn-primary" onclick="saveProfile()">บันทึก</button>
+        </div>
+      </div>
+
+      <div id="settings-pin" style="display: none;">
+        <div class="back-nav" onclick="closeSubSettings()">
+          <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> กลับ
+        </div>
+        <div class="card" style="box-shadow: none; padding: 0;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">รหัสผ่าน (PIN)</h2>
+          <label class="checkbox-wrapper" style="margin-bottom: 1.5rem;">
+            <input type="checkbox" id="pinToggle" onchange="togglePinSetup()">
+            <span style="font-weight: bold; color: var(--text-main);">เปิดใช้งาน PIN</span>
+          </label>
+          <div id="pinSetupBox" style="display: none; padding: 1rem; background: var(--bg-color); border-radius: 10px; margin-bottom: 1rem;">
+            <label>ตั้งรหัส 4 หลัก</label>
+            <input type="password" id="newPinInput" placeholder="xxxx" maxlength="4" pattern="[0-9]*" inputmode="numeric" style="letter-spacing: 0.5rem; text-align: center; font-size: 1.2rem; font-weight: bold;">
+            <button class="btn-primary" onclick="savePinSettings()">บันทึกรหัส</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-accounts" style="display: none;">
+        <div class="back-nav" onclick="closeSubSettings()">
+          <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> กลับ
+        </div>
+        <div class="card" style="box-shadow: none; padding: 0;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">บัญชีของคุณ</h2>
+          <div id="accountListContainer" style="margin-bottom: 1.5rem;"></div>
+          <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <h3 style="font-size: 1rem; margin-bottom: 1rem;">+ เพิ่มบัญชีใหม่</h3>
+            <label>ชื่อบัญชี</label>
+            <input type="text" id="newAccName" placeholder="เช่น เงินสด, ธนาคาร A" lang="th" dir="auto">
+            <label>ประเภท</label>
+            <select id="newAccType">
+              <option value="cash">เงินสด</option>
+              <option value="bank">ธนาคาร</option>
+              <option value="credit">บัตรเครดิต</option>
+              <option value="other">อื่นๆ</option>
+            </select>
+            <label>รายละเอียด</label>
+            <input type="text" id="newAccDetail" placeholder="ไว้จ่ายค่า..." lang="th" dir="auto">
+            <button class="btn-primary" onclick="createNewAccount()">สร้างบัญชี</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('dashboard', this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+      ภาพรวม
+    </div>
+    <div class="nav-item" onclick="switchTab('add', this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+      บันทึก
+    </div>
+    <div class="nav-item" onclick="switchTab('history', this)">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
+      รายการ
+    </div>
+    <div class="nav-item" onclick="switchTab('budget', this)">
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+      งบประมาณ
+    </div>
+  </nav>
+</div>
+
+<script>
+// ==================== DATA & SAFE PARSE ====================
+function safeParse(key, fallback) {
+  try { const item = localStorage.getItem(key); return item ? JSON.parse(item) : fallback; } 
+  catch(e) { return fallback; }
+}
+
+let transactions = safeParse('myMoney_transactions_v4', null);
+if (!transactions) {
+  let oldTrans = safeParse('myMoney_transactions_v3', []);
+  if (Array.isArray(oldTrans)) { oldTrans.forEach(t => t.accountId = 'default'); transactions = oldTrans; } else { transactions = []; }
+  localStorage.setItem('myMoney_transactions_v4', JSON.stringify(transactions));
+}
+
+let budgets = safeParse('myMoney_budgets_v3', {});
+let customCategories = safeParse('myMoney_custom_cats', { expense: [], income: [] });
+if(!customCategories.expense) customCategories.expense = [];
+if(!customCategories.income) customCategories.income = [];
+
+let userProfile = safeParse('myMoney_profile_v2', { name: '', bio: '', isDark: false, rankText: '', pinEnabled: false, pinCode: '', goalName: '', goalAmount: 0 });
+let accounts = safeParse('myMoney_accounts', [{ id: 'default', name: 'กระเป๋าหลัก', type: 'cash', detail: '' }]);
+if (!Array.isArray(accounts) || accounts.length === 0) accounts = [{ id: 'default', name: 'กระเป๋าหลัก', type: 'cash', detail: '' }];
+
+let currentAccountId = localStorage.getItem('myMoney_current_acc') || 'default';
+if(!accounts.find(a => a.id === currentAccountId)) currentAccountId = accounts[0].id;
+
+const defaultCategories = {
+  expense: ['อาหารและเครื่องดื่ม', 'เดินทาง/น้ำมัน', 'ช้อปปิ้ง', 'ความบันเทิง', 'ค่าที่พัก/บ้าน', 'ค่าน้ำ/ไฟ/เน็ต', 'สุขภาพ'],
+  income: ['เงินเดือน', 'ธุรกิจ/ค้าขาย', 'โบนัส', 'เงินปันผล']
+};
+
+let editId = null, savingEditId = null, appChart = null, currentChartMode = 'doughnut', currentHistMode = 'normal', enteredPin = '';
+
+const form = document.getElementById('transactionForm'), typeInput = document.getElementById('typeInput'), categoryInput = document.getElementById('categoryInput'), budgetCatInput = document.getElementById('budgetCatInput');
+
+// ==================== THAI DATE FORMATTER ====================
+function formatThaiDate(dateStr) {
+  if (!dateStr) return '';
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const d = new Date(dateStr);
+  return `${d.getDate()} ${months[d.getMonth()]} ${(d.getFullYear()+543).toString().slice(-2)}`;
+}
+
+// ==================== AUTO RECURRING (เพิ่มรายเดือนอัตโนมัติ) ====================
+function processRecurringTransactions() {
+  const currentMonthStr = new Date().toISOString().slice(0,7);
+  let addedCount = 0; let newTransactions = [];
+
+  transactions.forEach(t => {
+    if (t.recurring) {
+      const alreadyAdded = transactions.some(existing => 
+        existing.recurring && existing.detail === t.detail && existing.amount === t.amount && existing.accountId === t.accountId && existing.date.startsWith(currentMonthStr)
+      );
+      if (!alreadyAdded && t.date.slice(0,7) < currentMonthStr) {
+        const newT = { ...t, id: Date.now() + addedCount, date: `${currentMonthStr}-01` };
+        newTransactions.push(newT); addedCount++;
+      }
+    }
+  });
+
+  if (newTransactions.length > 0) {
+    transactions = [...transactions, ...newTransactions];
+    localStorage.setItem('myMoney_transactions_v4', JSON.stringify(transactions));
+    setTimeout(() => alert(`✅ ระบบเพิ่มรายการประจำของเดือนนี้อัตโนมัติ ${newTransactions.length} รายการแล้วครับ!`), 1000);
+  }
+}
+
+// ==================== INIT ====================
+function init() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateInput').value = today; document.getElementById('savingDateInput').value = today; document.getElementById('monthHistoryInput').value = today.slice(0,7);
+    
+    applyTheme();
+    document.getElementById('profileName').value = userProfile.name || ''; document.getElementById('profileBio').value = userProfile.bio || ''; document.getElementById('themeToggle').checked = userProfile.isDark; document.getElementById('pinToggle').checked = userProfile.pinEnabled;
+    
+    updateProfileDisplay(); updateHeaderAccountName(); updateCategoryOptions(); updateBudgetCategoryOptions(); updateSavingTabUI();
+    processRecurringTransactions(); // เช็ค Auto
+    
+    if (userProfile.pinEnabled && userProfile.pinCode) document.getElementById('pinScreen').style.display = 'flex';
+    else { document.getElementById('appContainer').style.display = 'block'; renderApp(); }
+  } catch (error) { document.getElementById('errorFallback').style.display = 'block'; }
+}
+
+window.onerror = function() { document.getElementById('errorFallback').style.display = 'block'; document.getElementById('appContainer').style.display = 'none'; };
+
+// ==================== THEME & UI HELPERS ====================
+function applyTheme() { document.body.classList.toggle('dark-theme', !!userProfile.isDark); }
+function toggleTheme() { userProfile.isDark = document.getElementById('themeToggle').checked; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); applyTheme(); }
+function showSuccessAnimation() { const overlay = document.getElementById('successOverlay'); overlay.classList.add('show'); setTimeout(() => overlay.classList.remove('show'), 1200); }
+
+// ==================== ACCOUNTS ====================
+function updateHeaderAccountName() { const acc = accounts.find(a => a.id === currentAccountId); document.getElementById('headerAccountName').textContent = acc ? acc.name : 'เลือกบัญชี'; }
+function renderAccountList() {
+  const container = document.getElementById('accountListContainer'); container.innerHTML = '';
+  accounts.forEach(acc => {
+    let iconSvg = acc.type === 'bank' ? '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>' : (acc.type === 'credit' ? '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>' : '<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>'); 
+    const isActive = acc.id === currentAccountId;
+    const div = document.createElement('div'); div.className = `account-card ${isActive ? 'active-acc' : ''}`; 
+    div.innerHTML = `
+      <div style="display: flex; align-items: center; flex: 1;" onclick="switchAccount('${acc.id}')">
+        <div class="acc-icon">${iconSvg}</div>
+        <div>
+          <div style="font-weight: 600; color: var(--text-main);">${acc.name}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${acc.detail || (acc.type==='cash'?'เงินสด':acc.type==='bank'?'ธนาคาร':'บัตรเครดิต')}</div>
+        </div>
+      </div>
+      <div style="display:flex; gap: 8px;">
+        ${isActive ? '<div style="color: var(--primary);"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' : ''}
+        ${accounts.length > 1 ? `<button class="del-acc-btn" onclick="deleteAccount('${acc.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>` : ''}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+function switchAccount(id) { currentAccountId = id; localStorage.setItem('myMoney_current_acc', id); updateHeaderAccountName(); renderAccountList(); renderApp(); closeSubSettings(); }
+function createNewAccount() {
+  const name = document.getElementById('newAccName').value.trim(), type = document.getElementById('newAccType').value, detail = document.getElementById('newAccDetail').value.trim();
+  if(!name) return alert('กรุณาตั้งชื่อบัญชีด้วยครับ');
+  const newAcc = { id: 'acc_' + Date.now(), name, type, detail }; accounts.push(newAcc); localStorage.setItem('myMoney_accounts', JSON.stringify(accounts));
+  switchAccount(newAcc.id); document.getElementById('newAccName').value = ''; document.getElementById('newAccDetail').value = ''; showSuccessAnimation();
+}
+function deleteAccount(id) {
+  if (accounts.length <= 1) return alert('ไม่สามารถลบบัญชีสุดท้ายได้ครับ');
+  if (confirm('ยืนยันลบบัญชีนี้? (รายการทั้งหมดในบัญชีจะหายไป)')) {
+    accounts = accounts.filter(a => a.id !== id); transactions = transactions.filter(t => t.accountId !== id);
+    if (currentAccountId === id) currentAccountId = accounts[0].id;
+    localStorage.setItem('myMoney_accounts', JSON.stringify(accounts)); localStorage.setItem('myMoney_current_acc', currentAccountId); saveData(); renderAccountList();
+  }
+}
+
+// ==================== CSV IMPORT ====================
+function handleCSVImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const text = ev.target.result; const rows = text.split('\n'); let importedCount = 0;
+    rows.forEach((row, idx) => {
+      if (idx === 0 || !row.trim()) return; 
+      const cols = row.split(',');
+      if (cols.length >= 5) {
+        const typeStr = cols[2].replace(/"/g,'').trim();
+        let sysType = 'expense'; if (typeStr === 'รายรับ') sysType = 'income'; if (typeStr === 'ออมเงิน') sysType = 'saving';
+        const amt = parseFloat(cols[4].replace(/"/g,'').trim());
+        if (!isNaN(amt)) {
+          transactions.push({ id: Date.now() + importedCount, accountId: currentAccountId, date: cols[0].replace(/"/g,'').replace('\uFEFF', '').trim(), detail: cols[1].replace(/"/g,'').trim(), type: sysType, category: cols[3].replace(/"/g,'').trim(), amount: amt, recurring: cols[5] ? cols[5].includes('ใช่') : false });
+          importedCount++;
+        }
+      }
+    });
+    saveData(); alert(`✅ นำเข้าข้อมูลสำเร็จ ${importedCount} รายการ!`); document.getElementById('csvImportInput').value = "";
+  };
+  reader.readAsText(file);
+}
+
+// ==================== PIN & PROFILE ====================
+function togglePinSetup() { const en = document.getElementById('pinToggle').checked; document.getElementById('pinSetupBox').style.display = en ? 'block' : 'none'; if(!en) { userProfile.pinEnabled = false; userProfile.pinCode = ''; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); alert('ปิดระบบล็อคแอปแล้ว'); } }
+function savePinSettings() { const pin = document.getElementById('newPinInput').value; if(pin.length !== 4) return alert('ต้องเป็นตัวเลข 4 หลัก'); userProfile.pinEnabled = true; userProfile.pinCode = pin; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); showSuccessAnimation(); closeSubSettings(); }
+function pressPin(num) { if(enteredPin.length < 4) { enteredPin += num; updatePinDots(); } if(enteredPin.length === 4) setTimeout(verifyPin, 100); }
+function deletePin() { if(enteredPin.length > 0) { enteredPin = enteredPin.slice(0, -1); updatePinDots(); } }
+function updatePinDots() { document.querySelectorAll('.pin-dot').forEach((dot, index) => { dot.className = 'pin-dot ' + (index < enteredPin.length ? 'filled' : ''); }); }
+function verifyPin() { if (enteredPin === userProfile.pinCode) { document.getElementById('pinScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; renderApp(); } else { enteredPin=''; updatePinDots(); alert("รหัสผิด"); } }
+function updateProfileDisplay() { document.getElementById('headerTitle').textContent = userProfile.name ? `เงินของ ${userProfile.name}` : 'เงินฉัน'; document.getElementById('displayProfileName').textContent = userProfile.name || 'ผู้ใช้งาน'; document.getElementById('displayProfileBio').textContent = userProfile.bio || 'เป้าหมาย...'; const rb = document.getElementById('displayProfileRank'); if(userProfile.rankText) { rb.style.display = 'inline-flex'; document.getElementById('rankBadgeText').textContent = userProfile.rankText; } else rb.style.display = 'none'; }
+function saveProfile() { userProfile.name = document.getElementById('profileName').value.trim(); userProfile.bio = document.getElementById('profileBio').value.trim(); localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); updateProfileDisplay(); closeSubSettings(); showSuccessAnimation(); }
+
+// ==================== SETTINGS & NAVIGATION ====================
+function openSettings() { document.querySelectorAll('.nav-item, .tab-content').forEach(el => el.classList.remove('active')); document.getElementById('tab-settings').classList.add('active'); closeSubSettings(); }
+function openSubSettings(id) { document.getElementById('settings-main').style.display = 'none'; document.getElementById(id).style.display = 'block'; if(id === 'settings-accounts') renderAccountList(); }
+function closeSubSettings() { document.getElementById('settings-main').style.display = 'block'; ['settings-edit','settings-pin','settings-accounts'].forEach(id => document.getElementById(id).style.display = 'none'); }
+
+function switchTab(tabId, element) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.getElementById('tab-' + tabId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active')); if(element) element.classList.add('active');
+  document.getElementById('aiResultBox').style.display = 'none'; document.getElementById('btnRunAI').style.display = 'flex';
+  if(tabId === 'dashboard' && appChart) { appChart.resize(); renderApp(); }
+  if(tabId === 'history') { renderHistoryList(); }
+}
+function switchAddTab(mode) {
+  const isN = mode === 'normal'; document.getElementById('btnAddNormal').classList.toggle('active', isN); document.getElementById('btnAddSaving').classList.toggle('active', !isN);
+  document.getElementById('addNormalSection').style.display = isN ? 'block' : 'none'; document.getElementById('addSavingSection').style.display = isN ? 'none' : 'block';
+  if(!isN) updateSavingTabUI();
+}
+function switchHistTab(mode) { currentHistMode = mode; document.getElementById('btnHistNormal').classList.toggle('active', mode === 'normal'); document.getElementById('btnHistSaving').classList.toggle('active', mode === 'saving'); renderHistoryList(); }
+
+// ==================== RENDERING ====================
+function getCurrentAccountTransactions() { return transactions.filter(t => t.accountId === currentAccountId); }
+
+function renderApp() {
+  const currentMonth = new Date().toISOString().slice(0,7);
+  let totalBalance = 0, monthIncome = 0, monthExpense = 0; let expenseChartData = {};
+  const accTx = getCurrentAccountTransactions();
+
+  accTx.forEach(t => {
+    const amt = parseFloat(t.amount);
+    if (t.type === 'income') { totalBalance += amt; if (t.date.startsWith(currentMonth)) monthIncome += amt; } 
+    else if (t.type === 'expense') { totalBalance -= amt; if (t.date.startsWith(currentMonth)) { monthExpense += amt; expenseChartData[t.category] = (expenseChartData[t.category] || 0) + amt; } } 
+    else if (t.type === 'saving') { totalBalance -= amt; }
+  });
+
+  document.getElementById('balanceDisplay').textContent = totalBalance.toLocaleString('th-TH', {minimumFractionDigits: 2});
+  document.getElementById('balanceDisplay').className = 'balance-amount ' + (totalBalance >= 0 ? 'text-success' : 'text-danger');
+  document.getElementById('incomeDisplay').textContent = '+' + monthIncome.toLocaleString('th-TH'); document.getElementById('expenseDisplay').textContent = '-' + monthExpense.toLocaleString('th-TH');
+
+  const goalCard = document.getElementById('goalCardDisplay');
+  if(userProfile.goalAmount > 0) {
+    goalCard.style.display = 'block'; document.getElementById('dashGoalName').textContent = userProfile.goalName;
+    const totalSaved = accTx.filter(t => t.type === 'saving' && t.category === userProfile.goalName).reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    const target = userProfile.goalAmount; const percent = Math.min((totalSaved / target) * 100, 100);
+    document.getElementById('dashGoalProgress').style.width = percent + '%'; document.getElementById('dashGoalCurrent').textContent = totalSaved.toLocaleString('th-TH') + ' ฿'; document.getElementById('dashGoalTarget').textContent = target.toLocaleString('th-TH') + ' ฿';
+    document.getElementById('dashGoalCompleteContainer').style.display = totalSaved >= target ? 'block' : 'none';
+  } else { goalCard.style.display = 'none'; }
+
+  renderChart(totalBalance, expenseChartData);
+  if(document.getElementById('tab-history').classList.contains('active')) renderHistoryList();
+
+  const budgetEl = document.getElementById('budgetList'); budgetEl.innerHTML = '';
+  if (Object.keys(budgets).length === 0) budgetEl.innerHTML = '<div class="empty-msg">ยังไม่มีการตั้งค่างบประมาณ</div>';
+  else {
+    Object.keys(budgets).forEach(cat => {
+      const limit = budgets[cat]; const spent = accTx.filter(t => t.type === 'expense' && t.category === cat && t.date.startsWith(currentMonth)).reduce((s, t) => s + parseFloat(t.amount), 0);
+      const pClass = spent > limit ? 'danger' : ((spent/limit)*100 > 85 ? 'warning' : '');
+      const bDiv = document.createElement('div'); bDiv.style.marginBottom = '1.2rem';
+      bDiv.innerHTML = `<div style="display:flex; justify-content:space-between; font-size:0.9rem;"><strong>${cat}</strong><span>${spent.toLocaleString()} / ${limit.toLocaleString()}</span></div><div class="progress-bg"><div class="progress-bar ${pClass}" style="width: ${Math.min((spent/limit)*100,100)}%"></div></div><div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-top:4px;"><span>เหลือ ${(limit - spent).toLocaleString()}</span><span style="color:var(--danger); cursor:pointer;" onclick="deleteBudget('${cat}')">ลบ</span></div>`;
+      budgetEl.appendChild(bDiv);
+    });
+  }
+}
+
+function renderHistoryList() {
+  const listEl = document.getElementById('historyList'), searchText = document.getElementById('searchHistoryInput').value.toLowerCase(), filterMonth = document.getElementById('monthHistoryInput').value; listEl.innerHTML = '';
+  let filteredData = getCurrentAccountTransactions().filter(t => {
+    return (currentHistMode === 'normal' ? (t.type === 'income' || t.type === 'expense') : t.type === 'saving') &&
+           (t.detail.toLowerCase().includes(searchText) || t.category.toLowerCase().includes(searchText)) &&
+           (filterMonth ? t.date.startsWith(filterMonth) : true);
+  });
+  if (filteredData.length === 0) return listEl.innerHTML = '<div class="empty-msg">ไม่พบรายการ</div>';
+  
+  filteredData.sort((a,b) => new Date(b.date) - new Date(a.date) || b.id - a.id).forEach(t => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    const amtColor = (t.type === 'income' || t.type === 'saving') ? 'text-success' : 'text-danger';
+    div.innerHTML = `<div style="flex: 1;"><div class="item-title">${t.detail} ${t.recurring ? '<span style="color:var(--warning); font-size:0.75rem;">(ประจำ)</span>' : ''}</div><div class="item-desc">${formatThaiDate(t.date)} • ${t.type === 'saving' ? `เป้าหมาย: ${t.category}` : t.category}</div></div><div style="text-align: right;"><div class="item-amount ${amtColor}">${t.type==='expense'?'-':'+'}${parseFloat(t.amount).toLocaleString('th-TH', {minimumFractionDigits: 2})}</div><div class="item-actions"><button class="btn-outline btn-small" onclick="editData(${t.id})">แก้ไข</button><button class="btn-outline btn-small btn-danger-outline" onclick="deleteData(${t.id})">ลบ</button></div></div>`;
+    listEl.appendChild(div);
+  });
+}
+
+function setChartType(type) { currentChartMode = type; document.getElementById('btnDoughnut').classList.toggle('active', type === 'doughnut'); document.getElementById('btnLine').classList.toggle('active', type === 'line'); renderApp(); }
+
+function renderChart(totalBalance, expenseChartData) {
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if (typeof Chart === 'undefined') return;
+  if (appChart) appChart.destroy();
+  if (currentChartMode === 'doughnut') {
+    const labels = Object.keys(expenseChartData).length ? Object.keys(expenseChartData) : ['ไม่มีข้อมูล']; const data = Object.keys(expenseChartData).length ? Object.values(expenseChartData) : [1];
+    appChart = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#64748b'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } } } });
+  } else {
+    let sorted = [...getCurrentAccountTransactions()].filter(t => t.type !== 'saving').sort((a,b) => new Date(a.date) - new Date(b.date));
+    let rb = 0, dbMap = {}; sorted.forEach(t => { rb += t.type === 'income' ? parseFloat(t.amount) : -parseFloat(t.amount); dbMap[t.date] = rb; });
+    let cDates = [], cBals = []; Object.keys(dbMap).sort((a,b)=>new Date(a)-new Date(b)).forEach(d => { const p=d.split('-'); cDates.push(`${p[2]}/${p[1]}`); cBals.push(dbMap[d]); });
+    if(cDates.length===1) { cDates.unshift('เริ่ม'); cBals.unshift(0); } if(cDates.length===0) { cDates=['ว่าง']; cBals=[0]; }
+    const c = totalBalance >= 0 ? '#10b981' : '#ef4444';
+    appChart = new Chart(ctx, { type: 'line', data: { labels: cDates, datasets: [{ data: cBals, borderColor: c, backgroundColor: c+'1a', borderWidth: 2, fill: true, tension: 0.1, pointRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { position: 'right', border: { display: false } } } } });
+  }
+}
+
+// ==================== AI EVALUATION (Shortened) ====================
+function runAIEvaluation() {
+  const btn = document.getElementById('btnRunAI'), loading = document.getElementById('aiLoading'), resultBox = document.getElementById('aiResultBox');
+  btn.style.display = 'none'; resultBox.style.display = 'none'; loading.style.display = 'block';
+  setTimeout(() => {
+    const cm = new Date().toISOString().slice(0,7); let inc=0, exp=0, sav=0;
+    getCurrentAccountTransactions().forEach(t => { if (t.date.startsWith(cm)) { const a = parseFloat(t.amount); if(t.type==='income') inc+=a; if(t.type==='saving') sav+=a; if(t.type==='expense') exp+=a; }});
+    const aiRank = document.getElementById('aiRankDisplay'), aiText = document.getElementById('aiTextDisplay');
+    if (inc===0 && exp===0 && sav===0) { aiRank.innerHTML = `ยศ: ว่างเปล่า`; aiText.innerHTML = `บันทึกก่อนค่อยมาดูนะ!`; loading.style.display = 'none'; resultBox.style.display = 'block'; btn.style.display = 'flex'; return; }
+    
+    let saveRatio = inc > 0 ? Math.round(((sav+(inc-exp-sav)) / inc) * 100) : 0;
+    let rName = "", msg = "";
+    if(saveRatio >= 40) { rName = "เศรษฐีป้ายแดง"; msg = `เก่งมาก! มีเงินเหลือ/เก็บถึง ${saveRatio}%`; }
+    else if(saveRatio >= 15) { rName = "คนรวยมีสติ"; msg = `การเงินสุขภาพดี เงินเหลือ ${saveRatio}%`; }
+    else if(saveRatio > 0) { rName = "นักสู้ชีวิต"; msg = `รอดตัวไปนะ เหลือเงินนิดหน่อย`; }
+    else { rName = "นักหมุนเงิน"; msg = `เตือน! ใช้เงินทะลุเป้าแล้ว ลดรายจ่ายด่วน`; }
+
+    aiRank.innerHTML = `ยศ: ${rName}`;
+    aiText.innerHTML = `• รับ: ${inc} ฿<br>• จ่าย: ${exp} ฿<br>• เฉลี่ยจ่ายวันละ: ${Math.round(exp/new Date().getDate())} ฿<br><br>💡 ${msg}`;
+    userProfile.rankText = rName; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); updateProfileDisplay();
+    loading.style.display = 'none'; resultBox.style.display = 'block'; btn.style.display = 'flex'; btn.textContent = 'ประเมินอีกครั้ง';
+  }, 800); 
+}
+
+// ==================== FORMS & TRANSACTIONS ====================
+form.addEventListener('submit', function(e) {
+  e.preventDefault(); if(categoryInput.value === 'ADD_NEW') return alert('กรุณายืนยันหมวดหมู่ใหม่');
+  const newData = { id: editId || Date.now(), accountId: currentAccountId, type: typeInput.value, category: categoryInput.value, detail: document.getElementById('detailInput').value.trim(), amount: parseFloat(document.getElementById('amountInput').value), date: document.getElementById('dateInput').value, recurring: document.getElementById('recurringInput').checked };
+  if (editId) { const idx = transactions.findIndex(t => t.id === editId); if(idx > -1) transactions[idx] = newData; cancelEdit(); } else { transactions.push(newData); form.reset(); document.getElementById('dateInput').value = newData.date; updateCategoryOptions(); showSuccessAnimation(); }
+  saveData(); document.querySelectorAll('.nav-item')[2].click(); 
+});
+
+function editData(id) {
+  const t = transactions.find(t => t.id === id); if(!t) return;
+  if(t.type === 'saving') {
+    savingEditId = id; switchTab('add', document.querySelectorAll('.nav-item')[1]); switchAddTab('saving');
+    document.getElementById('savingDetailInput').value = t.detail; document.getElementById('savingAmountInput').value = t.amount; document.getElementById('savingDateInput').value = t.date;
+    document.getElementById('cancelSavingEditBtn').style.display = 'block'; 
+  } else {
+    editId = id; switchTab('add', document.querySelectorAll('.nav-item')[1]); switchAddTab('normal');
+    typeInput.value = t.type; updateCategoryOptions(); categoryInput.value = t.category; document.getElementById('detailInput').value = t.detail; document.getElementById('amountInput').value = t.amount; document.getElementById('dateInput').value = t.date; document.getElementById('recurringInput').checked = t.recurring; 
+    document.getElementById('formTitle').textContent = 'แก้ไขรายการ'; document.getElementById('cancelEditBtn').style.display = 'block'; 
+  }
+}
+function cancelEdit() { editId = null; form.reset(); document.getElementById('dateInput').value = new Date().toISOString().split('T')[0]; updateCategoryOptions(); document.getElementById('formTitle').textContent = 'บันทึกรายการใหม่'; document.getElementById('cancelEditBtn').style.display = 'none'; }
+function deleteData(id) { if(confirm('ต้องการลบรายการนี้?')) { transactions = transactions.filter(t => t.id !== id); saveData(); } }
+
+function saveGoalSettings() { const n = document.getElementById('goalNameInput').value.trim(); const a = parseFloat(document.getElementById('goalAmountInput').value); if(!n || !a) return alert('กรุณาระบุให้ถูกต้อง'); userProfile.goalName = n; userProfile.goalAmount = a; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); updateSavingTabUI(); renderApp(); }
+function editGoalSettings() { document.getElementById('goalSetupUI').style.display = 'block'; document.getElementById('goalProgressUI').style.display = 'none'; document.getElementById('goalNameInput').value = userProfile.goalName; document.getElementById('goalAmountInput').value = userProfile.goalAmount; document.getElementById('cancelGoalBtn').style.display = 'block'; }
+function clearGoalSettings() { if(confirm('ยกเลิกเป้าหมาย?')) { userProfile.goalName = ''; userProfile.goalAmount = 0; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); updateSavingTabUI(); renderApp(); } }
+function completeGoal() { alert('🎉 ยินดีด้วย เก็บเงินสำเร็จ!'); userProfile.goalName = ''; userProfile.goalAmount = 0; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); updateSavingTabUI(); renderApp(); showSuccessAnimation(); }
+function saveSavingTransaction() {
+  const amt = parseFloat(document.getElementById('savingAmountInput').value); const date = document.getElementById('savingDateInput').value; const detail = document.getElementById('savingDetailInput').value.trim() || 'หยอดกระปุก';
+  if(!amt) return alert('กรุณาใส่จำนวนเงิน');
+  const newData = { id: savingEditId || Date.now(), accountId: currentAccountId, type: 'saving', category: userProfile.goalName || 'ออมเงิน', detail, amount: amt, date, recurring: false };
+  if(savingEditId) { const idx = transactions.findIndex(t => t.id === savingEditId); if(idx > -1) transactions[idx] = newData; cancelSavingEdit(); } else { transactions.push(newData); document.getElementById('savingAmountInput').value = ''; showSuccessAnimation(); }
+  saveData(); updateSavingTabUI();
+}
+function cancelSavingEdit() { savingEditId = null; document.getElementById('savingDetailInput').value = 'หยอดกระปุก'; document.getElementById('savingAmountInput').value = ''; document.getElementById('savingDateInput').value = new Date().toISOString().split('T')[0]; document.getElementById('cancelSavingEditBtn').style.display = 'none'; }
+
+function saveBudget() { const cat = budgetCatInput.value; const amt = parseFloat(document.getElementById('budgetAmtInput').value); if(cat==='ADD_NEW' || !cat || !amt) return alert('ข้อมูลไม่ครบ'); budgets[cat] = amt; budgetCatInput.value=''; document.getElementById('budgetAmtInput').value=''; saveData(); showSuccessAnimation(); }
+function deleteBudget(cat) { if(confirm('ลบงบนี้?')) { delete budgets[cat]; saveData(); } }
+
+function getCombinedCategories(type) { return [...defaultCategories[type], ...customCategories[type]]; }
+function updateCategoryOptions() { const t = typeInput.value; categoryInput.innerHTML = '<option value="" disabled selected>เลือก</option>'; getCombinedCategories(t).forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; categoryInput.appendChild(o); }); const n = document.createElement('option'); n.value = 'ADD_NEW'; n.textContent = '+ เพิ่มใหม่...'; n.style.color = 'var(--primary)'; categoryInput.appendChild(n); document.getElementById('customCatBox').style.display = 'none'; }
+function updateBudgetCategoryOptions() { budgetCatInput.innerHTML = '<option value="" disabled selected>เลือก</option>'; getCombinedCategories('expense').forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; budgetCatInput.appendChild(o); }); const n = document.createElement('option'); n.value = 'ADD_NEW'; n.textContent = '+ เพิ่มใหม่...'; n.style.color = 'var(--primary)'; budgetCatInput.appendChild(n); document.getElementById('customBudgetCatBox').style.display = 'none'; }
+categoryInput.addEventListener('change', e => document.getElementById('customCatBox').style.display = e.target.value === 'ADD_NEW' ? 'flex' : 'none');
+budgetCatInput.addEventListener('change', e => document.getElementById('customBudgetCatBox').style.display = e.target.value === 'ADD_NEW' ? 'flex' : 'none');
+typeInput.addEventListener('change', updateCategoryOptions);
+
+function saveCustomCategory(source) {
+  let t = source === 'add' ? typeInput.value : 'expense'; let el = source === 'add' ? document.getElementById('customCatName') : document.getElementById('customBudgetCatName'); let val = el.value.trim();
+  if(!val || getCombinedCategories(t).includes(val)) return alert('ชื่อไม่ถูกต้องหรือซ้ำ');
+  customCategories[t].push(val); localStorage.setItem('myMoney_custom_cats', JSON.stringify(customCategories));
+  el.value = ''; updateCategoryOptions(); updateBudgetCategoryOptions();
+  if(source === 'add') { categoryInput.value = val; document.getElementById('customCatBox').style.display = 'none'; } else { budgetCatInput.value = val; document.getElementById('customBudgetCatBox').style.display = 'none'; }
+}
+
+function exportData() {
+  if(!transactions.length) return alert('ไม่มีข้อมูล'); let csv = '\uFEFFวันที่,รายละเอียด,ประเภท,หมวดหมู่,จำนวนเงิน,รายการประจำ\n';
+  transactions.forEach(t => csv += `${t.date},${t.detail},${t.type==='saving'?'ออมเงิน':(t.type==='income'?'รายรับ':'รายจ่าย')},${t.category},${t.amount},${t.recurring?'ใช่':'ไม่ใช่'}\n`);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = 'รายการ.csv'; a.click();
+}
+
+function saveData() { localStorage.setItem('myMoney_transactions_v4', JSON.stringify(transactions)); localStorage.setItem('myMoney_budgets_v3', JSON.stringify(budgets)); renderApp(); }
+
+init();
+</script>
+</body>
+</html>
