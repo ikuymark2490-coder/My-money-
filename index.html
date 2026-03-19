@@ -778,7 +778,7 @@ function saveProfile(){
   updatePD(); closeSubSettings(); showOK(); 
 }
 
-// 3. ฟังก์ชันเรียก AI (Groq + วิเคราะห์เชิงลึกแบบโปร)
+// 3. ฟังก์ชันเรียก AI (Groq + วิเคราะห์เชิงลึกแบบโปร + UI สวยงาม)
 async function runAIEvaluation() {
   var btn=document.getElementById('btnRunAI'), loading=document.getElementById('aiLoading'), rb=document.getElementById('aiResultBox');
   btn.style.display='none'; rb.style.display='none'; 
@@ -786,16 +786,21 @@ async function runAIEvaluation() {
   
   var cm=new Date().toISOString().slice(0,7); 
   var inc=0, exp=0, gsav=0, ce={}, netBalance=0;
+  var expenseItems = []; 
   
-  // คำนวณเงินคงเหลือทั้งหมด และรายรับรายจ่ายเดือนปัจจุบัน
+  // 1. คำนวณเงินคงเหลือและรายรับรายจ่าย
   getCurTx().forEach(function(t){ 
     var a=parseFloat(t.amount);
     if(t.type==='income') netBalance += a;
-    else netBalance -= a;
+    else if(t.type==='expense' || t.type==='saving') netBalance -= a;
 
     if(t.date.startsWith(cm)){ 
       if(t.type==='income') inc+=a; 
-      if(t.type==='expense'){ exp+=a; ce[t.category]=(ce[t.category]||0)+a; } 
+      if(t.type==='expense'){ 
+        exp+=a; 
+        ce[t.category]=(ce[t.category]||0)+a; 
+        expenseItems.push({detail: t.detail, amount: a}); 
+      } 
       if(t.type==='saving') gsav+=a; 
     } 
   });
@@ -806,43 +811,71 @@ async function runAIEvaluation() {
     loading.style.display='none'; rb.style.display='block'; btn.style.display='flex'; return; 
   }
 
-  // เช็คว่ามีหมวดไหนใช้เกินงบที่ตั้งไว้ไหม
+  // 2. เช็คการคุมงบ
   let budgetIssues = [];
-  Object.keys(budgets).forEach(cat => {
-    let spent = ce[cat] || 0;
-    if (spent > budgets[cat]) budgetIssues.push(`${cat} (เกินงบ ${spent - budgets[cat]}฿)`);
-  });
-  let budgetAlert = budgetIssues.length > 0 ? budgetIssues.join(', ') : 'คุมงบได้ดีเยี่ยม ไม่มีหมวดไหนเกินงบ';
+  let budgetStatus = 'คุมงบได้ดีเยี่ยม ไม่มีหมวดไหนเกินงบ';
+  if (Object.keys(budgets).length > 0) {
+      Object.keys(budgets).forEach(cat => {
+        let spent = ce[cat] || 0;
+        if (spent > budgets[cat]) budgetIssues.push(`${cat} (เกินงบ ${spent - budgets[cat]}฿)`);
+      });
+      if (budgetIssues.length > 0) budgetStatus = `🚨 ใช้เกินงบในหมวด: ` + budgetIssues.join(', ');
+  } else {
+      budgetStatus = 'ไม่ได้ตั้งงบประมาณไว้';
+  }
+
+  // 3. เรียงลำดับของที่ซื้อแพงสุด
+  expenseItems.sort((a, b) => b.amount - a.amount);
+  let topPurchases = expenseItems.slice(0, 5).map(item => `${item.detail} (${item.amount}฿)`).join(', ');
+  if (!topPurchases) topPurchases = "ไม่มีรายการซื้อของ";
+
+  // --- ส่วนจัดการแสดงผลหัวข้อ UI สรุป (ใช้ร่วมกันทั้งออฟไลน์และออนไลน์) ---
+  var cats=Object.entries(ce).sort(function(a,b){ return b[1]-a[1]; }); 
+  var th='';
+  if(cats.length){ 
+    th='<ul class="ai-list" style="margin-bottom: 1rem;">'; 
+    cats.slice(0,3).forEach(function(c,i){ 
+      th+='<li>'+(i===0?'🥇':i===1?'🥈':'🥉')+' <b>'+c[0]+'</b>: '+c[1].toLocaleString()+' ฿</li>'; 
+    }); 
+    th+='</ul>'; 
+  }
+  
+  var ad=1, dAvg=Math.round(exp/ad);
+  var nm=userProfile.name?'<b>คุณ'+userProfile.name+'</b>':'<b>คุณ</b>';
+  var sh=''; if(gsav>0) sh+='• หยอดกระปุก: <span style="color:var(--warning);font-weight:bold;">'+gsav.toLocaleString()+' ฿</span><br>'; else sh+='• เงินออม: <span style="color:var(--text-muted);">0 ฿</span><br>';
+  
+  var headerHTML = 'สรุปเดือนนี้ของคุณ '+nm+':<br>• คงเหลือสุทธิ: <b style="color:var(--primary);">'+netBalance.toLocaleString()+' ฿</b><br>• รายรับ: <span class="text-success">'+inc.toLocaleString()+' ฿</span><br>• รายจ่าย: <span class="ai-highlight">'+exp.toLocaleString()+' ฿</span><br>'+sh+'• เฉลี่ย/วัน: <b>'+dAvg.toLocaleString()+' ฿</b><br><br>📊 <b>หมวดที่ใช้ดุเดือดสุด:</b>'+th;
+
+  // --- จบส่วนจัดการ UI สรุป ---
 
   if (userProfile.aiMode === 'online' && navigator.onLine) {
     if (!userProfile.apiKey) {
-       showToast("กรุณาใส่ Groq API Key ก่อนครับ", "warning");
+       showToast("กรุณาใส่ Groq API Key ในเมนูตั้งค่าก่อนครับ", "warning");
        loading.style.display='none'; btn.style.display='flex'; return;
     }
 
-    const cats=Object.entries(ce).sort((a,b)=>b[1]-a[1]).slice(0,3).map(c => `${c[0]} ${c[1]}฿`).join(', ');
+    const catsText = cats.slice(0,3).map(c => `${c[0]} ${c[1]}฿`).join(', ');
 
-    // --- กำหนดบุคลิกให้ลึกและดูโปรขึ้น ---
-    let personaSys = "คุณคือที่ปรึกษาการเงินสาวสายโปร เก่งการลงทุน วิเคราะห์เฉียบขาด ใช้คำพูดฉลาด ดูแพง อธิบายตรงประเด็นและให้กำลังใจ";
-    if (userProfile.aiPersona === 'male_expert') personaSys = "คุณคือที่ปรึกษาการเงินหนุ่มสุดเนี๊ยบ สุขุม อบอุ่น วิเคราะห์ด้วยหลักเหตุผลและตัวเลข ให้คำแนะนำระดับผู้บริหาร";
-    else if (userProfile.aiPersona === 'cute_girl') personaSys = "คุณคือผู้ช่วยการเงินวัยรุ่นสาวสุดคิวท์ ร่าเริง สดใส แซวเก่ง ใช้ภาษาวัยรุ่น น่ารักแต่แฝงความรู้เรื่องเงินแบบเนียนๆ";
-    else if (userProfile.aiPersona === 'savage') personaSys = "คุณคือโค้ชการเงินสายดาร์ก ปากแจ๋ว ดุดัน วิจารณ์ตรงๆ แรงๆ ไม่เกรงใจใคร ด่าเพื่อบิ้วให้มีสติเรื่องเงิน ปนตลกร้าย";
+    let personaSys = "คุณคือผู้เชี่ยวชาญการเงินระดับโลก (ผู้หญิง) วิเคราะห์เจาะลึกแบบมืออาชีพ ใช้คำพูดแพง มีระดับ ให้คำปรึกษาเชิงกลยุทธ์";
+    if (userProfile.aiPersona === 'male_expert') personaSys = "คุณคือผู้บริหารและนักลงทุนหนุ่มที่ประสบความสำเร็จ วิเคราะห์ด้วยตัวเลขเฉียบขาด เป็นเหตุเป็นผล อบอุ่นแต่มืออาชีพสุดๆ";
+    else if (userProfile.aiPersona === 'cute_girl') personaSys = "คุณคือวัยรุ่นสาวสวยที่เป็นอัจฉริยะด้านการเงิน คุยสนุก แซวเก่ง ใช้ภาษาวัยรุ่น แต่ให้ความรู้เรื่องเงินแบบจึ้งๆ โดนใจ";
+    else if (userProfile.aiPersona === 'savage') personaSys = "คุณคือโค้ชการเงินสายดาร์กสุดโหด ปากแซ่บ วิจารณ์การใช้เงินแบบดุดัน ตรงไปตรงมา ขุดความจริงมาด่าให้ตาสว่าง ปนตลกร้าย ไม่เกรงใจ";
 
-    // --- Prompt โฉมใหม่ที่อัดข้อมูลเชิงลึกให้ AI ---
-    const promptText = `คำสั่ง: สวมบทบาทเป็น "${personaSys}" 
-ข้อมูลบัญชีเดือนนี้ของผู้ใช้ชื่อ "${userProfile.name || 'คุณ'}":
-- เงินคงเหลือสุทธิ (พร้อมใช้): ${netBalance} บาท
+    const promptText = `คำสั่ง: สวมบทบาทเป็น "${personaSys}" อย่างเคร่งครัด
+วิเคราะห์พฤติกรรมการเงินเดือนนี้ของ "${userProfile.name || 'ผู้ใช้งาน'}":
+- เงินคงเหลือสุทธิทั้งหมดที่มีตอนนี้: ${netBalance} บาท (THB)
 - รายรับเดือนนี้: ${inc} บาท
 - รายจ่ายเดือนนี้: ${exp} บาท
-- เงินออม: ${gsav} บาท
-- หมวดที่สูบเงินไปเยอะสุด: ${cats || 'ไม่มีข้อมูล'}
-- สถานะงบประมาณ: ${budgetAlert}
+- เงินที่ออมได้เดือนนี้: ${gsav} บาท
+- หมวดหมู่ที่สูบเงินไปเยอะสุด: ${catsText || 'ไม่มี'}
+- สิ่งที่ซื้อ (เรียงจากแพงสุด): ${topPurchases}
+- สถานะการคุมงบประมาณ: ${budgetStatus}
 
-จงวิเคราะห์ข้อมูลนี้และตอบกลับมาเป็นข้อๆ ดังนี้:
-1. วิจารณ์สถานะการเงินปัจจุบัน (เทียบรายจ่ายกับรายรับ และเงินคงเหลือ)
-2. เจาะลึกพฤติกรรมการใช้เงิน (ดูจากหมวดที่จ่ายเยอะและงบที่คุมไม่อยู่)
-3. คำแนะนำที่นำไปใช้ได้จริงสำหรับเดือนหน้า
-(ใช้โทนเสียงตามบทบาทอย่างเคร่งครัด ตอบให้ดูฉลาด มืออาชีพ ใส่ Emoji ให้สวยงาม และความยาวกระชับพอดีอ่าน ไม่เกิน 6-7 บรรทัด)`;
+ให้คุณวิเคราะห์และตอบกลับมาตามหัวข้อดังนี้ (จัดย่อหน้าให้สวยงาม):
+ประเมินสถานการณ์: (วิจารณ์สถานะการเงินปัจจุบัน)
+วิจารณ์พฤติกรรม: (วิจารณ์สิ่งที่ซื้อ หรือหมวดที่ใช้เกินงบแบบเจาะลึก)
+แผนการเดือนหน้า: (แนะนำ Action Plan ที่จับต้องได้จริง 1-2 ข้อ)
+** ตอบกระชับ ไม่เกิน 8 บรรทัด ใส่ Emoji ให้สวยงาม และใช้ภาษาตามบทบาท 100% ห้ามหลุดคาแรคเตอร์ **`;
 
     try {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -851,57 +884,64 @@ async function runAIEvaluation() {
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
           messages: [{ role: "user", content: promptText }],
-          temperature: 0.7,
+          temperature: 0.75, 
           max_tokens: 1500
         })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       
-      const result = data.choices[0].message.content;
-      let rank = exp > inc ? "นักหมุนเงิน 🚨" : (inc > 0 && (inc-exp)/inc >= 0.3 ? "เศรษฐีหน้าใหม่ 👑" : "นักบริหารเงิน 🧠");
+      const aiContent = data.choices[0].message.content;
+      let rank = exp > inc && inc > 0 ? "นักหมุนเงิน 🚨" : (inc > 0 && (inc-exp)/inc >= 0.3 ? "เศรษฐีหน้าใหม่ 👑" : "นักบริหารเงิน 🧠");
       
       ar.innerHTML='ยศ (AI วิเคราะห์): ' + rank;
       loading.style.display='none'; rb.style.display='block';
-      at.innerHTML = ""; let i = 0;
-      function typeEffect() {
-        if (i < result.length) { 
-          // แปลงการขึ้นบรรทัดใหม่ให้เป็นแท็ก <br>
-          at.innerHTML += result.charAt(i) === '\n' ? '<br>' : result.charAt(i); 
+      
+      // ใส่ Header UI ลงไปก่อน แล้วค่อยตามด้วยกล่องข้อความ AI
+      at.innerHTML = headerHTML + '💬 <b>คำแนะนำจากระบบ AI:</b><br><div id="aiTB" style="background:var(--primary-light);padding:10px;border-radius:8px;margin-top:8px;color:var(--text-main);line-height:1.5;min-height:45px;"></div>';
+      
+      let aiBox = document.getElementById('aiTB');
+      let i = 0;
+      function typeEffectOnline() {
+        if (i < aiContent.length) { 
+          // จัดการการขึ้นบรรทัดใหม่
+          aiBox.innerHTML += aiContent.charAt(i) === '\n' ? '<br>' : aiContent.charAt(i); 
           i++; 
-          setTimeout(typeEffect, 10); // พิมพ์เร็วขึ้น
+          setTimeout(typeEffectOnline, 10); 
         }
         else { btn.style.display='flex'; btn.innerHTML = '✨ ให้ AI ประเมินอีกครั้ง'; }
       }
-      typeEffect();
+      typeEffectOnline();
       return; 
     } catch (err) {
       showToast("Groq API มีปัญหา! ใช้ระบบออฟไลน์ชั่วคราว", "warning");
     }
   }
 
-  // 🔵 โหมด AI ออฟไลน์ (ระบบเดิม ทำงานเร็ว ไม่ต้องใช้เน็ต)
+  // 🔵 โหมด AI ออฟไลน์
   setTimeout(function(){
-    var cats=Object.entries(ce).sort(function(a,b){ return b[1]-a[1]; }); var th='',tcn=cats.length>0?cats[0][0]:'',tca=cats.length>0?cats[0][1]:0;
-    if(cats.length){ th='<ul class="ai-list">'; cats.slice(0,3).forEach(function(c,i){ th+='<li>'+(i===0?'🥇':i===1?'🥈':'🥉')+' <b>'+c[0]+'</b>: '+c[1].toLocaleString()+' ฿</li>'; }); th+='</ul>'; }
-    var ad=ed.size>0?ed.size:1,dAvg=Math.round(exp/ad),total=inc-exp,sr=inc>0?Math.round((total/inc)*100):(total<0?-100:0),isR=inc>=1000000,rn='',sp='';
+    var total=inc-exp, sr=inc>0?Math.round((total/inc)*100):(total<0?-100:0), isR=inc>=1000000, rn='', sp='';
     if(exp>inc&&inc>0){ rn='นักหมุนเงินระดับสิบ'; sp+='สัญญาณเตือนภัย! 🚨 รายจ่ายพุ่งทะลุรายรับไปแล้วครับ '; }
     else if(inc===0&&exp>0){ rn='สายเปย์ไร้รอยต่อ'; sp+='ยังไม่มีรายรับเลย แต่รายจ่ายวิ่งไปก่อนแล้ว! '; }
     else if(sr>=40){ rn=isR?'ท่านประธาน':'เซียนเก็บเงิน'; sp+='สภาพคล่องยอดเยี่ยม! บริหารเงินได้เฉียบขาดมากครับ 👏 '; }
     else if(sr>=15){ rn='คนรวยมีสติ'; sp+='สุขภาพการเงินดีมาก รักษาสมดุลกระแสเงินสดได้น่าประทับใจ '; }
     else if(sr>0){ rn='นักสู้ชีวิต'; sp+='เอาตัวรอดไปได้นะครับ แต่กระแสเงินสดค่อนข้างตึง '; }
     else{ rn='มนุษย์เดือนชนเดือน'; sp+='รายจ่ายไล่รายรับมาติดๆ แล้วนะครับ! '; }
+    
+    var tcn=cats.length>0?cats[0][0]:'',tca=cats.length>0?cats[0][1]:0;
     if(tcn&&exp>0){ var cr=Math.round((tca/exp)*100); if(cr>=30) sp+='หมวด "'+tcn+'" สูบเงินไปถึง '+cr+'% ของรายจ่ายทั้งหมดเลยครับ '; }
     if(gsav>0) sp+='ส่วนเงินหยอดกระปุก ('+gsav.toLocaleString()+' ฿) ขอให้ถึงเป้าหมายไวๆ นะครับ 🎯 ';
+    
     if(budgetIssues.length>0) sp+='ระวังด้วย คุณใช้เงินเกินงบไปแล้วในหมวด: '+budgetIssues.join(', ')+' ';
+    
     if(exp>inc&&inc>0) sp+='แนะนำให้เบรกรายจ่ายที่ไม่จำเป็นด่วนครับ!';
     else if(sr>=40) sp+='เงินเหลือเยอะ ลองศึกษาการลงทุนเพิ่มเติมนะครับ 📈';
     else sp+='พยายามรักษาวินัยแบบนี้ต่อไปนะครับ!';
-    var nm=userProfile.name?'<b>คุณ'+userProfile.name+'</b>':'<b>คุณ</b>';
+    
     ar.innerHTML='ยศ (ออฟไลน์): '+rn;
-    var sh=''; if(gsav>0) sh+='• หยอดกระปุก: <span style="color:var(--warning);font-weight:bold;">'+gsav.toLocaleString()+' ฿</span><br>'; else sh+='• เงินออม: <span style="color:var(--text-muted);">0 ฿</span><br>';
-    at.innerHTML='สรุปเดือนนี้ของคุณ '+nm+':<br>• คงเหลือสุทธิ: <b style="color:var(--primary);">'+netBalance.toLocaleString()+' ฿</b><br>• รายรับ: <span class="text-success">'+inc.toLocaleString()+' ฿</span><br>• รายจ่าย: <span class="ai-highlight">'+exp.toLocaleString()+' ฿</span><br>'+sh+'• เฉลี่ย/วัน: <b>'+dAvg.toLocaleString()+' ฿</b><br><br>📊 <b>หมวดที่ใช้ดุเดือดสุด:</b>'+th+'💬 <b>คำแนะนำจากระบบ:</b><br><div id="aiTB" style="background:var(--primary-light);padding:10px;border-radius:8px;margin-top:8px;color:var(--text-main);line-height:1.5;min-height:45px;"></div>';
-    userProfile.rankText=rn; localStorage.setItem('myMoney_profile_v2',JSON.stringify(userProfile)); updatePD();
+    
+    at.innerHTML = headerHTML + '💬 <b>คำแนะนำจากระบบ:</b><br><div id="aiTB" style="background:var(--primary-light);padding:10px;border-radius:8px;margin-top:8px;color:var(--text-main);line-height:1.5;min-height:45px;"></div>';
+    
     loading.style.display='none'; rb.style.display='block'; btn.style.display='none';
     var tb=document.getElementById('aiTB'),tk=sp.match(/<[^>]+>|[\s\S]/g)||[],ci=0;
     function tn(){ if(ci<tk.length){ tb.innerHTML+=tk[ci]; ci++; setTimeout(tn,22); } else { btn.style.display='flex'; btn.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:white;fill:none;stroke-width:2;"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg> ประเมินอีกครั้ง'; } }
@@ -1058,4 +1098,4 @@ init();
 </script>
 <script>if('serviceWorker' in navigator){ window.addEventListener('load',function(){ navigator.serviceWorker.register('./sw.js').catch(function(){}); }); }</script>
 </body>
-             </html>
+                                                                                                                                                                                </html>
