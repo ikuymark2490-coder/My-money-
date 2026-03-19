@@ -1,5 +1,5 @@
 // ⚡️ อัปเดตเลขเวอร์ชันเป็น v5 เพื่อล้างท่อใหม่ทั้งหมด
-const CACHE_NAME = 'my-money-cache-v9'; 
+const CACHE_NAME = 'my-money-cache-v10'; 
 const urlsToCache = [
   './',
   './index.html',
