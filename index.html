@@ -756,7 +756,7 @@ async function runAIEvaluation() {
     const promptText = `วิเคราะห์การเงิน: ผู้ใช้ชื่อ ${userProfile.name || 'คุณ'}. รับเดือนนี้ ${inc} บ., จ่าย ${exp} บ., ออม ${gsav} บ. หมวดจ่ายเยอะสุด: ${cats || 'ไม่มี'}. ขอคำแนะนำสั้นๆ 3 บรรทัด เป็นกันเอง มีอีโมจิ ชื่นชมและเตือนสติ`;
     
         try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userProfile.apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${userProfile.apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
