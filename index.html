@@ -480,9 +480,27 @@ body.dark-theme .check-wrapper{background:rgba(30,41,59,0.9);}
           <div class="settings-item" onclick="openSubSettings('settings-accounts')" style="border-left:3px solid var(--primary);"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg> จัดการบัญชี & สลับบัญชี</div><div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
           <div class="settings-item" onclick="openSubSettings('settings-edit')"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> แก้ไขโปรไฟล์</div><div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
           <div class="settings-item" onclick="openSubSettings('settings-pin')"><div class="settings-item-left"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> รหัสล็อค PIN</div><div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
-          <label class="settings-item"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> โหมดกลางคืน</div><div class="checkbox-wrapper" style="margin:0;"><input type="checkbox" id="themeToggle" onchange="toggleTheme()" style="width:20px;height:20px;"></div></label>
+          <label class="settings-item"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> โหมดกลางคืน</div>
+          <div class="checkbox-wrapper" style="margin:0;"><input type="checkbox" id="themeToggle" onchange="toggleTheme()" style="width:20px;height:20px;"></div></label>
           <div class="settings-item" onclick="exportData()"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> ส่งออก CSV</div></div>
           <div class="settings-item" onclick="document.getElementById('csvImportInput').click()"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg> นำเข้า CSV</div></div>
+                    <label class="settings-item">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg> 
+              ใช้ AI สมองจริง (ออนไลน์)
+            </div>
+            <div class="checkbox-wrapper" style="margin:0;">
+              <input type="checkbox" id="aiModeToggle" onchange="toggleAiMode()" style="width:20px;height:20px;">
+            </div>
+          </label>
+                    <div class="settings-item" onclick="openSubSettings('settings-api')" id="apiKeySettingItem" style="display:none; border-left: 3px solid #ec4899;">
+            <div class="settings-item-left">
+              <svg viewBox="0 0 24 24" style="stroke:#ec4899;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3L15.5 7.5z"/></svg>
+              ตั้งค่า API Key (สมอง AI)
+            </div>
+            <div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+
           <input type="file" id="csvImportInput" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
         </div>
       </div>
@@ -494,6 +512,32 @@ body.dark-theme .check-wrapper{background:rgba(30,41,59,0.9);}
         <div class="card" style="box-shadow:none;padding:0;"><h2 style="font-size:1.1rem;margin-bottom:1rem;">บัญชีของคุณ</h2><div id="accountListContainer" style="margin-bottom:1.5rem;"></div>
         <div style="border-top:1px solid var(--border);padding-top:1.5rem;"><h3 style="font-size:1rem;margin-bottom:1rem;">+ เพิ่มบัญชีใหม่</h3><label>ชื่อบัญชี</label><input type="text" id="newAccName" placeholder="เช่น เงินสด, ธนาคาร A" lang="th" dir="auto"><label>ประเภท</label><select id="newAccType"><option value="cash">เงินสด</option><option value="bank">ธนาคาร</option><option value="credit">บัตรเครดิต</option><option value="other">อื่นๆ</option></select><label>รายละเอียด</label><input type="text" id="newAccDetail" placeholder="ไว้จ่ายค่า..." lang="th" dir="auto"><button class="btn-primary" onclick="createNewAccount()">สร้างบัญชี</button></div></div>
       </div>
+            <div id="settings-api" style="display:none;">
+        <div class="back-nav" onclick="closeSubSettings()"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> กลับ</div>
+        <div class="card" style="box-shadow:none;padding:0;">
+          <h2 style="font-size:1.1rem;margin-bottom:1rem;color:#ec4899;">ตั้งค่าระบบสมอง AI</h2>
+          
+          <div style="background:var(--primary-light); padding:1rem; border-radius:10px; margin-bottom:1.5rem;">
+            <h3 style="font-size:0.95rem; margin-bottom:0.5rem; color:var(--text-main);">🤔 ทำไมต้องใส่ API Key เอง?</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">เพื่อความ <b>ปลอดภัยขั้นสุด</b>! แอปนี้ทำงานแบบ Offline 100% (ไม่มีระบบหลังบ้านคอยแอบดูข้อมูล) การใส่คีย์ของคุณเองจะทำให้ไม่มีใครรู้ข้อมูลการเงินคุณ และป้องกันคนอื่นขโมยโควต้า AI ไปใช้ครับ</p>
+          </div>
+
+          <div style="margin-bottom:1.5rem;">
+            <h3 style="font-size:0.95rem; margin-bottom:0.5rem;">🛠️ วิธีรับ API Key (ฟรี)</h3>
+            <ol style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; padding-left:1.2rem; margin-bottom:0;">
+              <li>ไปที่เว็บ <a href="https://aistudio.google.com/" target="_blank" style="color:var(--primary);">Google AI Studio</a></li>
+              <li>ล็อกอินด้วยบัญชี Gmail</li>
+              <li>กดปุ่ม <b>Get API key</b> (รูปกุญแจซ้ายบน)</li>
+              <li>กด <b>Create API key</b> แล้วคัดลอกรหัสมาวางด้านล่างนี้ได้เลย</li>
+            </ol>
+          </div>
+
+          <label>รหัส API Key ของคุณ</label>
+          <input type="text" id="newApiKeyInput" placeholder="AIzaSy..." style="font-family:monospace; font-size:0.9rem;">
+          <button class="btn-primary" style="background:var(--ai-gradient);" onclick="saveApiKeyUI()">💾 บันทึก API Key</button>
+        </div>
+      </div>
+
     </div>
   </div>
   <nav class="bottom-nav">
@@ -629,8 +673,22 @@ function parseVoice(text){ var pT='expense',pA='',pC='',pD=text; var am=text.mat
 function procRecurring(){ var cm=new Date().toISOString().slice(0,7); var added=0,newT=[]; transactions.forEach(function(t){ if(t.recurring){ var ex=transactions.some(function(x){ return x.recurring&&x.detail===t.detail&&String(x.amount)===String(t.amount)&&x.accountId===t.accountId&&x.date.startsWith(cm); }); if(!ex&&t.date.slice(0,7)<cm){ newT.push(Object.assign({},t,{id:Date.now()+added,date:cm+'-01'})); added++; } } }); if(newT.length>0){ transactions=transactions.concat(newT); localStorage.setItem('myMoney_transactions_v4',JSON.stringify(transactions)); setTimeout(function(){ showToast('เพิ่มรายการประจำเดือนนี้ '+newT.length+' รายการแล้ว','success','Auto Recurring'); },800); } }
 function handleCSVImport(e){ var file=e.target.files[0]; if(!file) return; var reader=new FileReader(); reader.onload=function(ev){ var rows=ev.target.result.split('\n'); var cnt=0; rows.forEach(function(row,i){ if(i===0||!row.trim()) return; var cols=row.split(','); if(cols.length>=5){ var ts=cols[2].replace(/"/g,'').trim(); var st=ts==='รายรับ'?'income':(ts==='ออมเงิน'?'saving':'expense'); var amt=parseFloat(cols[4].replace(/"/g,'').trim()); if(!isNaN(amt)){ transactions.push({id:Date.now()+cnt,accountId:cAccId,date:cols[0].replace(/"/g,'').replace('\uFEFF','').trim(),detail:cols[1].replace(/"/g,'').trim(),type:st,category:cols[3].replace(/"/g,'').trim(),amount:amt,recurring:cols[5]?cols[5].includes('ใช่'):false}); cnt++; } } }); saveDat(); showToast('นำเข้าสำเร็จ '+cnt+' รายการ','success','นำเข้า CSV'); document.getElementById('csvImportInput').value=''; }; reader.readAsText(file); }
 function openSettings(){ document.querySelectorAll('.nav-item,.tab-content').forEach(function(el){ el.classList.remove('active'); }); document.getElementById('tab-settings').classList.add('active'); closeSubSettings(); }
-function openSubSettings(id){ document.getElementById('settings-main').style.display='none'; ['settings-edit','settings-pin','settings-accounts'].forEach(function(s){ document.getElementById(s).style.display=s===id?'block':'none'; }); if(id==='settings-accounts') renderAccList(); if(id==='settings-pin'){ document.getElementById('pinToggle').checked=userProfile.pinEnabled; document.getElementById('pinSetupBox').style.display=userProfile.pinEnabled?'block':'none'; } if(id==='settings-edit'){ document.getElementById('profileName').value=userProfile.name||''; document.getElementById('profileBio').value=userProfile.bio||''; } }
-function closeSubSettings(){ document.getElementById('settings-main').style.display='block'; ['settings-edit','settings-pin','settings-accounts'].forEach(function(id){ document.getElementById(id).style.display='none'; }); }
+function openSubSettings(id){ 
+  document.getElementById('settings-main').style.display='none'; 
+  ['settings-edit','settings-pin','settings-accounts','settings-api'].forEach(function(s){ 
+    document.getElementById(s).style.display=s===id?'block':'none'; 
+  }); 
+  if(id==='settings-accounts') renderAccList(); 
+  if(id==='settings-pin'){ document.getElementById('pinToggle').checked=userProfile.pinEnabled; document.getElementById('pinSetupBox').style.display=userProfile.pinEnabled?'block':'none'; } 
+  if(id==='settings-edit'){ document.getElementById('profileName').value=userProfile.name||''; document.getElementById('profileBio').value=userProfile.bio||''; } 
+  if(id==='settings-api'){ document.getElementById('newApiKeyInput').value=userProfile.apiKey||''; }
+}
+
+function closeSubSettings(){ 
+  document.getElementById('settings-main').style.display='block'; 
+  ['settings-edit','settings-pin','settings-accounts','settings-api'].forEach(function(id){ document.getElementById(id).style.display='none'; }); 
+}
+
 function switchTab(tabId,el){ document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); }); document.getElementById('tab-'+tabId).classList.add('active'); document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); }); if(el) el.classList.add('active'); document.getElementById('aiResultBox').style.display='none'; document.getElementById('btnRunAI').style.display='flex'; if(tabId==='dashboard'&&appChart){ appChart.resize(); renderApp(); } if(tabId==='history') renderHistoryList(); }
 function switchAddTab(mode){ var isN=mode==='normal'; document.getElementById('btnAddNormal').classList.toggle('active',isN); document.getElementById('btnAddSaving').classList.toggle('active',!isN); document.getElementById('addNormalSection').style.display=isN?'block':'none'; document.getElementById('addSavingSection').style.display=isN?'none':'block'; if(!isN) updSavUI(); }
 function switchHistTab(mode){ histMode=mode; document.getElementById('btnHistNormal').classList.toggle('active',mode==='normal'); document.getElementById('btnHistSaving').classList.toggle('active',mode==='saving'); renderHistoryList(); }
@@ -658,39 +716,101 @@ function renderChart(bal,cd){
   if(chartMode==='doughnut'){ var lb=Object.keys(cd).length?Object.keys(cd):['ไม่มีข้อมูล']; var dt=Object.keys(cd).length?Object.values(cd):[1]; var cl=Object.keys(cd).length?['#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#64748b']:['#e2e8f0']; appChart=new Chart(ctx,{type:'doughnut',data:{labels:lb,datasets:[{data:dt,backgroundColor:cl,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'75%',plugins:{legend:{position:'right',labels:{boxWidth:12}}}}}); }
   else{ var sr2=getCurTx().filter(function(t){ return t.type!=='saving'; }).sort(function(a,b){ return new Date(a.date)-new Date(b.date); }); var rb=0,dm={}; sr2.forEach(function(t){ rb+=t.type==='income'?parseFloat(t.amount):-parseFloat(t.amount); dm[t.date]=rb; }); var cD=[],cB=[]; Object.keys(dm).sort(function(a,b){ return new Date(a)-new Date(b); }).forEach(function(d){ var p=d.split('-'); cD.push(p[2]+'/'+p[1]); cB.push(dm[d]); }); if(cD.length===1){ cD.unshift('เริ่ม'); cB.unshift(0); } if(!cD.length){ cD=['ว่าง']; cB=[0]; } var c=bal>=0?'#10b981':'#ef4444'; appChart=new Chart(ctx,{type:'line',data:{labels:cD,datasets:[{data:cB,borderColor:c,backgroundColor:c+'1a',borderWidth:2,fill:true,tension:0.1,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{position:'right',border:{display:false}}}}}); }
 }
-function runAIEvaluation(){
-  var btn=document.getElementById('btnRunAI'),loading=document.getElementById('aiLoading'),rb=document.getElementById('aiResultBox');
-  btn.style.display='none'; rb.style.display='none'; loading.innerHTML='<div class="loader-bar"><div class="loader-progress"><\/div><\/div><div style="font-size:0.85rem;color:var(--text-muted);">AI กำลังวิเคราะห์พฤติกรรม...<\/div>'; loading.style.display='block';
+async function runAIEvaluation() {
+  var btn=document.getElementById('btnRunAI'), loading=document.getElementById('aiLoading'), rb=document.getElementById('aiResultBox');
+  btn.style.display='none'; rb.style.display='none'; 
+  loading.innerHTML='<div class="loader-bar"><div class="loader-progress"></div></div><div style="font-size:0.85rem;color:var(--text-muted);">กำลังวิเคราะห์...</div>';
+  loading.style.display='block';
+  
+    // ⚡️ แทรกตรงนี้: ถ้ามีผลประเมินเดิม และไม่ได้กด "ประเมินอีกครั้ง" ให้เอาของเก่ามาโชว์เลย
+  if (userProfile.lastAiAnalysis && btn.innerText !== '✨ ให้ AI ประเมินอีกครั้ง' && userProfile.aiMode === 'online') {
+    document.getElementById('aiRankDisplay').innerHTML = 'ยศ (AI วิเคราะห์): ' + (userProfile.rankText || 'นักบริหารเงิน');
+    document.getElementById('aiTextDisplay').innerHTML = userProfile.lastAiAnalysis;
+    loading.style.display = 'none'; 
+    rb.style.display = 'block'; 
+    btn.style.display = 'flex'; 
+    btn.innerHTML = '✨ ให้ AI ประเมินอีกครั้ง';
+    return; // จบการทำงาน ไม่ต้องเสียโควต้า API
+  }
+
+
+  // เตรียมข้อมูลดึงยอดบัญชี
+  var cm=new Date().toISOString().slice(0,7); var inc=0,exp=0,gsav=0,ce={},ed=new Set();
+  getCurTx().forEach(function(t){ if(t.date.startsWith(cm)){ var a=parseFloat(t.amount); if(t.type==='income') inc+=a; if(t.type==='expense'){ exp+=a; ce[t.category]=(ce[t.category]||0)+a; ed.add(t.date); } if(t.type==='saving') gsav+=a; } });
+  
+  var ar=document.getElementById('aiRankDisplay'), at=document.getElementById('aiTextDisplay');
+  if(inc===0&&exp===0&&gsav===0){ 
+    ar.innerHTML='ยศ: 👻 สุญญากาศทางการเงิน'; at.innerHTML='ยังไม่มีข้อมูลให้วิเคราะห์เลย ลองบันทึกรายรับรายจ่ายก่อนนะครับ!'; 
+    loading.style.display='none'; rb.style.display='block'; btn.style.display='flex'; btn.textContent='ประเมินอีกครั้ง'; return; 
+  }
+
+  // 🔴 แยกสายทำงาน: ออนไลน์ (AI จริง) VS ออฟไลน์ (แบบเดิม)
+  if (userProfile.aiMode === 'online' && navigator.onLine) {
+    if (!userProfile.apiKey) {
+       showToast("กรุณาใส่ API Key ในเมนูตั้งค่าก่อนครับ หรือปิดสวิตช์เพื่อใช้ออฟไลน์", "warning");
+       loading.style.display='none'; btn.style.display='flex'; return;
+    }
+    
+    // โหมด AI จริง (Gemini)
+    const cats=Object.entries(ce).sort((a,b)=>b[1]-a[1]).slice(0,3).map(c => `${c[0]} ${c[1]}฿`).join(', ');
+    const promptText = `วิเคราะห์การเงิน: ผู้ใช้ชื่อ ${userProfile.name || 'คุณ'}. รับเดือนนี้ ${inc} บ., จ่าย ${exp} บ., ออม ${gsav} บ. หมวดจ่ายเยอะสุด: ${cats || 'ไม่มี'}. ขอคำแนะนำสั้นๆ 3 บรรทัด เป็นกันเอง มีอีโมจิ ชื่นชมและเตือนสติ`;
+    
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userProfile.apiKey}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      
+      const result = data.candidates[0].content.parts[0].text;
+      let rank = exp > inc && inc > 0 ? "นักหมุนเงิน 🚨" : (inc > 0 && (inc-exp)/inc >= 0.3 ? "เศรษฐีหน้าใหม่ 👑" : "นักบริหารเงิน 🧠");
+      
+      ar.innerHTML='ยศ (AI วิเคราะห์): ' + rank;
+      userProfile.rankText = rank; localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile)); updatePD();
+      
+      loading.style.display='none'; rb.style.display='block';
+      at.innerHTML = ""; let i = 0;
+      function typeEffect() {
+        if (i < result.length) { at.innerHTML += result.charAt(i); i++; setTimeout(typeEffect, 20); }
+        else { btn.style.display='flex'; btn.innerHTML = '✨ ให้ AI ประเมินอีกครั้ง'; }
+      }
+      typeEffect();
+      return; // จบการทำงาน AI จริง
+    } catch (err) {
+      showToast("ระบบ AI มีปัญหา! สลับใช้ระบบออฟไลน์ชั่วคราว", "warning");
+      // ถ้าเน็ตหลุดกลางคันหรือ Key ผิด จะไหลลงไปใช้โหมดออฟไลน์อัตโนมัติ
+    }
+  }
+
+  // 🔵 โหมด AI ออฟไลน์ (ระบบเดิม ทำงานเร็ว ไม่ต้องใช้เน็ต)
   setTimeout(function(){
-    var cm=new Date().toISOString().slice(0,7); var inc=0,exp=0,gsav=0,ce={},ed=new Set();
-    getCurTx().forEach(function(t){ if(t.date.startsWith(cm)){ var a=parseFloat(t.amount); if(t.type==='income') inc+=a; if(t.type==='expense'){ exp+=a; ce[t.category]=(ce[t.category]||0)+a; ed.add(t.date); } if(t.type==='saving') gsav+=a; } });
-    var ar=document.getElementById('aiRankDisplay'),at=document.getElementById('aiTextDisplay');
-    if(inc===0&&exp===0&&gsav===0){ ar.innerHTML='ยศ: \uD83D\uDC7B สุญญากาศทางการเงิน'; at.innerHTML='ยังไม่มีข้อมูลให้วิเคราะห์เลย ลองบันทึกรายรับรายจ่ายก่อนนะครับ!'; loading.style.display='none'; rb.style.display='block'; btn.style.display='flex'; btn.textContent='ประเมินอีกครั้ง'; return; }
     var cats=Object.entries(ce).sort(function(a,b){ return b[1]-a[1]; }); var th='',tcn=cats.length>0?cats[0][0]:'',tca=cats.length>0?cats[0][1]:0;
-    if(cats.length){ th='<ul class="ai-list">'; cats.slice(0,3).forEach(function(c,i){ th+='<li>'+(i===0?'\uD83E\uDD47':i===1?'\uD83E\uDD48':'\uD83E\uDD49')+' <b>'+c[0]+'<\/b>: '+c[1].toLocaleString()+' \u0E3F<\/li>'; }); th+='<\/ul>'; }
+    if(cats.length){ th='<ul class="ai-list">'; cats.slice(0,3).forEach(function(c,i){ th+='<li>'+(i===0?'🥇':i===1?'🥈':'🥉')+' <b>'+c[0]+'</b>: '+c[1].toLocaleString()+' ฿</li>'; }); th+='</ul>'; }
     var ad=ed.size>0?ed.size:1,dAvg=Math.round(exp/ad),total=inc-exp,sr=inc>0?Math.round((total/inc)*100):(total<0?-100:0),isR=inc>=1000000,rn='',sp='';
-    if(exp>inc&&inc>0){ rn='\u0E19\u0E31\u0E01\u0E2B\u0E21\u0E38\u0E19\u0E40\u0E07\u0E34\u0E19\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E2A\u0E34\u0E1A'; sp+='\u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E40\u0E15\u0E37\u0E2D\u0E19\u0E20\u0E31\u0E22! \uD83D\uDEA8 \u0E23\u0E32\u0E22\u0E08\u0E48\u0E32\u0E22\u0E1E\u0E38\u0E48\u0E07\u0E17\u0E30\u0E25\u0E38\u0E23\u0E32\u0E22\u0E23\u0E31\u0E1A\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27\u0E04\u0E23\u0E31\u0E1A '; }
-    else if(inc===0&&exp>0){ rn='\u0E2A\u0E32\u0E22\u0E40\u0E1B\u0E22\u0E4C\u0E44\u0E23\u0E49\u0E23\u0E2D\u0E22\u0E15\u0E48\u0E2D'; sp+='\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E23\u0E32\u0E22\u0E23\u0E31\u0E1A\u0E40\u0E25\u0E22 \u0E41\u0E15\u0E48\u0E23\u0E32\u0E22\u0E08\u0E48\u0E32\u0E22\u0E27\u0E34\u0E48\u0E07\u0E44\u0E1B\u0E01\u0E48\u0E2D\u0E19\u0E41\u0E25\u0E49\u0E27! '; }
-    else if(sr>=40){ rn=isR?'\u0E17\u0E48\u0E32\u0E19\u0E1B\u0E23\u0E30\u0E18\u0E32\u0E19':'\u0E40\u0E0B\u0E35\u0E22\u0E19\u0E40\u0E01\u0E47\u0E1A\u0E40\u0E07\u0E34\u0E19'; sp+='\u0E2A\u0E20\u0E32\u0E1E\u0E04\u0E25\u0E48\u0E2D\u0E07\u0E22\u0E2D\u0E14\u0E40\u0E22\u0E35\u0E48\u0E22\u0E21! \u0E1A\u0E23\u0E34\u0E2B\u0E32\u0E23\u0E40\u0E07\u0E34\u0E19\u0E44\u0E14\u0E49\u0E40\u0E09\u0E35\u0E22\u0E1A\u0E02\u0E32\u0E14\u0E21\u0E32\u0E01\u0E04\u0E23\u0E31\u0E1A \uD83D\uDC4F '; }
-    else if(sr>=15){ rn='\u0E04\u0E19\u0E23\u0E27\u0E22\u0E21\u0E35\u0E2A\u0E15\u0E34'; sp+='\u0E2A\u0E38\u0E02\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E40\u0E07\u0E34\u0E19\u0E14\u0E35\u0E21\u0E32\u0E01 \u0E23\u0E31\u0E01\u0E29\u0E32\u0E2A\u0E21\u0E14\u0E38\u0E25\u0E01\u0E23\u0E30\u0E41\u0E2A\u0E40\u0E07\u0E34\u0E19\u0E2A\u0E14\u0E44\u0E14\u0E49\u0E19\u0E48\u0E32\u0E1B\u0E23\u0E30\u0E17\u0E31\u0E1A\u0E43\u0E08 '; }
-    else if(sr>0){ rn='\u0E19\u0E31\u0E01\u0E2A\u0E39\u0E49\u0E0A\u0E35\u0E27\u0E34\u0E15'; sp+='\u0E40\u0E2D\u0E32\u0E15\u0E31\u0E27\u0E23\u0E2D\u0E14\u0E44\u0E1B\u0E44\u0E14\u0E49\u0E19\u0E30\u0E04\u0E23\u0E31\u0E1A \u0E41\u0E15\u0E48\u0E01\u0E23\u0E30\u0E41\u0E2A\u0E40\u0E07\u0E34\u0E19\u0E2A\u0E14\u0E04\u0E48\u0E2D\u0E19\u0E02\u0E49\u0E32\u0E07\u0E15\u0E36\u0E07 '; }
-    else{ rn='\u0E21\u0E19\u0E38\u0E29\u0E22\u0E4C\u0E40\u0E14\u0E37\u0E2D\u0E19\u0E0A\u0E19\u0E40\u0E14\u0E37\u0E2D\u0E19'; sp+='\u0E23\u0E32\u0E22\u0E08\u0E48\u0E32\u0E22\u0E44\u0E25\u0E48\u0E23\u0E32\u0E22\u0E23\u0E31\u0E1A\u0E21\u0E32\u0E15\u0E34\u0E14\u0E46 \u0E41\u0E25\u0E49\u0E27\u0E19\u0E30\u0E04\u0E23\u0E31\u0E1A! '; }
-    if(tcn&&exp>0){ var cr=Math.round((tca/exp)*100); if(cr>=30) sp+='\u0E2B\u0E21\u0E27\u0E14 "'+tcn+'" \u0E2A\u0E39\u0E1A\u0E40\u0E07\u0E34\u0E19\u0E44\u0E1B\u0E16\u0E36\u0E07 '+cr+'% \u0E02\u0E2D\u0E07\u0E23\u0E32\u0E22\u0E08\u0E48\u0E32\u0E22\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14\u0E40\u0E25\u0E22\u0E04\u0E23\u0E31\u0E1A '; }
-    if(gsav>0) sp+='\u0E2A\u0E48\u0E27\u0E19\u0E40\u0E07\u0E34\u0E19\u0E2B\u0E22\u0E2D\u0E14\u0E01\u0E23\u0E30\u0E1B\u0E38\u0E01 ('+gsav.toLocaleString()+' \u0E3F) \u0E02\u0E2D\u0E43\u0E2B\u0E49\u0E16\u0E36\u0E07\u0E40\u0E1B\u0E49\u0E32\u0E2B\u0E21\u0E32\u0E22\u0E44\u0E27\u0E46 \u0E19\u0E30\u0E04\u0E23\u0E31\u0E1A \uD83C\uDFAF ';
-    if(exp>inc&&inc>0) sp+='\u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E40\u0E1A\u0E23\u0E01\u0E23\u0E32\u0E22\u0E08\u0E48\u0E32\u0E22\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E08\u0E33\u0E40\u0E1B\u0E47\u0E19\u0E14\u0E48\u0E27\u0E19\u0E04\u0E23\u0E31\u0E1A!';
-    else if(sr>=40) sp+='\u0E40\u0E07\u0E34\u0E19\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E40\u0E22\u0E2D\u0E30 \u0E25\u0E2D\u0E07\u0E28\u0E36\u0E01\u0E29\u0E32\u0E01\u0E32\u0E23\u0E25\u0E07\u0E17\u0E38\u0E19\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E40\u0E15\u0E34\u0E21\u0E19\u0E30\u0E04\u0E23\u0E31\u0E1A \uD83D\uDCC8';
-    else sp+='\u0E1E\u0E22\u0E32\u0E22\u0E32\u0E21\u0E23\u0E31\u0E01\u0E29\u0E32\u0E27\u0E34\u0E19\u0E31\u0E22\u0E41\u0E1A\u0E1A\u0E19\u0E35\u0E49\u0E15\u0E48\u0E2D\u0E44\u0E1B\u0E19\u0E30\u0E04\u0E23\u0E31\u0E1A!';
-    var nm=userProfile.name?'<b>\u0E04\u0E38\u0E13'+userProfile.name+'<\/b>':'<b>\u0E04\u0E38\u0E13<\/b>';
-    ar.innerHTML='\u0E22\u0E28: '+rn;
-    var sh=''; if(gsav>0) sh+='\u2022 \u0E2B\u0E22\u0E2D\u0E14\u0E01\u0E23\u0E30\u0E1B\u0E38\u0E01: <span style="color:var(--warning);font-weight:bold;">'+gsav.toLocaleString()+' \u0E3F<\/span><br>'; else sh+='\u2022 \u0E40\u0E07\u0E34\u0E19\u0E2D\u0E2D\u0E21: <span style="color:var(--text-muted);">0 \u0E3F<\/span><br>';
-    at.innerHTML='\u0E2A\u0E23\u0E38\u0E1B\u0E40\u0E14\u0E37\u0E2D\u0E19\u0E19\u0E35\u0E49\u0E02\u0E2D\u0E07 '+nm+':<br>\u2022 \u0E23\u0E32\u0E22\u0E23\u0E31\u0E1A: <span class="text-success">'+inc.toLocaleString()+' \u0E3F<\/span><br>\u2022 \u0E23\u0E32\u0E22\u0E08\u0E48\u0E32\u0E22: <span class="ai-highlight">'+exp.toLocaleString()+' \u0E3F<\/span><br>'+sh+'\u2022 \u0E40\u0E09\u0E25\u0E35\u0E48\u0E22\/\u0E27\u0E31\u0E19: <b>'+dAvg.toLocaleString()+' \u0E3F<\/b><br><br>\uD83D\uDCCA <b>\u0E2B\u0E21\u0E27\u0E14\u0E17\u0E35\u0E48\u0E43\u0E0A\u0E49\u0E14\u0E38\u0E40\u0E14\u0E37\u0E2D\u0E14\u0E2A\u0E38\u0E14:<\/b>'+th+'\uD83D\uDCAC <b>\u0E04\u0E27\u0E32\u0E21\u0E40\u0E2B\u0E47\u0E19\u0E08\u0E32\u0E01 AI:<\/b><br><div id="aiTB" style="background:var(--primary-light);padding:10px;border-radius:8px;margin-top:8px;color:var(--text-main);line-height:1.5;min-height:45px;"><\/div>';
+    if(exp>inc&&inc>0){ rn='นักหมุนเงินระดับสิบ'; sp+='สัญญาณเตือนภัย! 🚨 รายจ่ายพุ่งทะลุรายรับไปแล้วครับ '; }
+    else if(inc===0&&exp>0){ rn='สายเปย์ไร้รอยต่อ'; sp+='ยังไม่มีรายรับเลย แต่รายจ่ายวิ่งไปก่อนแล้ว! '; }
+    else if(sr>=40){ rn=isR?'ท่านประธาน':'เซียนเก็บเงิน'; sp+='สภาพคล่องยอดเยี่ยม! บริหารเงินได้เฉียบขาดมากครับ 👏 '; }
+    else if(sr>=15){ rn='คนรวยมีสติ'; sp+='สุขภาพการเงินดีมาก รักษาสมดุลกระแสเงินสดได้น่าประทับใจ '; }
+    else if(sr>0){ rn='นักสู้ชีวิต'; sp+='เอาตัวรอดไปได้นะครับ แต่กระแสเงินสดค่อนข้างตึง '; }
+    else{ rn='มนุษย์เดือนชนเดือน'; sp+='รายจ่ายไล่รายรับมาติดๆ แล้วนะครับ! '; }
+    if(tcn&&exp>0){ var cr=Math.round((tca/exp)*100); if(cr>=30) sp+='หมวด "'+tcn+'" สูบเงินไปถึง '+cr+'% ของรายจ่ายทั้งหมดเลยครับ '; }
+    if(gsav>0) sp+='ส่วนเงินหยอดกระปุก ('+gsav.toLocaleString()+' ฿) ขอให้ถึงเป้าหมายไวๆ นะครับ 🎯 ';
+    if(exp>inc&&inc>0) sp+='แนะนำให้เบรกรายจ่ายที่ไม่จำเป็นด่วนครับ!';
+    else if(sr>=40) sp+='เงินเหลือเยอะ ลองศึกษาการลงทุนเพิ่มเติมนะครับ 📈';
+    else sp+='พยายามรักษาวินัยแบบนี้ต่อไปนะครับ!';
+    var nm=userProfile.name?'<b>คุณ'+userProfile.name+'</b>':'<b>คุณ</b>';
+    ar.innerHTML='ยศ (ออฟไลน์): '+rn;
+    var sh=''; if(gsav>0) sh+='• หยอดกระปุก: <span style="color:var(--warning);font-weight:bold;">'+gsav.toLocaleString()+' ฿</span><br>'; else sh+='• เงินออม: <span style="color:var(--text-muted);">0 ฿</span><br>';
+    at.innerHTML='สรุปเดือนนี้ของคุณ '+nm+':<br>• รายรับ: <span class="text-success">'+inc.toLocaleString()+' ฿</span><br>• รายจ่าย: <span class="ai-highlight">'+exp.toLocaleString()+' ฿</span><br>'+sh+'• เฉลี่ย/วัน: <b>'+dAvg.toLocaleString()+' ฿</b><br><br>📊 <b>หมวดที่ใช้ดุเดือดสุด:</b>'+th+'💬 <b>คำแนะนำจากระบบ:</b><br><div id="aiTB" style="background:var(--primary-light);padding:10px;border-radius:8px;margin-top:8px;color:var(--text-main);line-height:1.5;min-height:45px;"></div>';
     userProfile.rankText=rn; localStorage.setItem('myMoney_profile_v2',JSON.stringify(userProfile)); updatePD();
     loading.style.display='none'; rb.style.display='block'; btn.style.display='none';
     var tb=document.getElementById('aiTB'),tk=sp.match(/<[^>]+>|[\s\S]/g)||[],ci=0;
-    function tn(){ if(ci<tk.length){ tb.innerHTML+=tk[ci]; ci++; setTimeout(tn,22); } else { btn.style.display='flex'; btn.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:white;fill:none;stroke-width:2;"><path d="M21 2v6h-6"><\/path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"><\/path><path d="M3 22v-6h6"><\/path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"><\/path><\/svg> \u0E1B\u0E23\u0E30\u0E40\u0E21\u0E34\u0E19\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07'; } }
+    function tn(){ if(ci<tk.length){ tb.innerHTML+=tk[ci]; ci++; setTimeout(tn,22); } else { btn.style.display='flex'; btn.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:white;fill:none;stroke-width:2;"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg> ประเมินอีกครั้ง'; } }
     tn();
-  },1000);
+  }, 800);
 }
+
 form.addEventListener('submit',function(e){ e.preventDefault(); if(catInp.value==='ADD_NEW') return showToast('\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E2B\u0E21\u0E27\u0E14\u0E2B\u0E21\u0E39\u0E48\u0E43\u0E2B\u0E21\u0E48\u0E01\u0E48\u0E2D\u0E19','warning'); var nd={id:editId||Date.now(),accountId:cAccId,type:typeInp.value,category:catInp.value,detail:document.getElementById('detailInput').value.trim(),amount:parseFloat(document.getElementById('amountInput').value),date:document.getElementById('dateInput').value,recurring:document.getElementById('recurringInput').checked}; if(editId){ var idx=transactions.findIndex(function(t){ return t.id===editId; }); if(idx>-1) transactions[idx]=nd; cancelEdit(); } else { transactions.push(nd); form.reset(); document.getElementById('dateInput').value=nd.date; updCatOpts(); showOK(); } saveDat(); document.querySelectorAll('.nav-item')[2].click(); });
 function editData(id){ var t=transactions.find(function(x){ return x.id===id; }); if(!t) return; if(t.type==='saving'){ savingEditId=id; switchTab('add',document.querySelectorAll('.nav-item')[1]); switchAddTab('saving'); document.getElementById('savingDetailInput').value=t.detail; document.getElementById('savingAmountInput').value=t.amount; document.getElementById('savingDateInput').value=t.date; document.getElementById('cancelSavingEditBtn').style.display='block'; } else { editId=id; switchTab('add',document.querySelectorAll('.nav-item')[1]); switchAddTab('normal'); typeInp.value=t.type; updCatOpts(); catInp.value=t.category; document.getElementById('detailInput').value=t.detail; document.getElementById('amountInput').value=t.amount; document.getElementById('dateInput').value=t.date; document.getElementById('recurringInput').checked=t.recurring; document.getElementById('formTitle').textContent='\u0E41\u0E01\u0E49\u0E44\u0E02\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23'; document.getElementById('cancelEditBtn').style.display='block'; } }
 function cancelEdit(){ editId=null; form.reset(); document.getElementById('dateInput').value=new Date().toISOString().split('T')[0]; updCatOpts(); document.getElementById('formTitle').textContent='\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E43\u0E2B\u0E21\u0E48'; document.getElementById('cancelEditBtn').style.display='none'; }
@@ -711,8 +831,68 @@ budCatInp.addEventListener('change',function(e){ document.getElementById('custom
 typeInp.addEventListener('change',updCatOpts);
 function saveCustomCategory(src){ var t=src==='add'?typeInp.value:'expense'; var el=src==='add'?document.getElementById('customCatName'):document.getElementById('customBudgetCatName'); var val=el.value.trim(); if(!val||getCats(t).includes(val)) return showToast('\u0E0A\u0E37\u0E48\u0E2D\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07\u0E2B\u0E23\u0E37\u0E2D\u0E21\u0E35\u0E2B\u0E21\u0E27\u0E14\u0E2B\u0E21\u0E39\u0E48\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27','warning'); customCategories[t].push(val); localStorage.setItem('myMoney_custom_cats',JSON.stringify(customCategories)); el.value=''; updCatOpts(); updBudCatOpts(); if(src==='add'){ catInp.value=val; document.getElementById('customCatBox').style.display='none'; } else { budCatInp.value=val; document.getElementById('customBudgetCatBox').style.display='none'; } showToast('\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E2B\u0E21\u0E27\u0E14\u0E2B\u0E21\u0E39\u0E48 "'+val+'" \u0E41\u0E25\u0E49\u0E27','success'); }
 function exportData(){ if(!transactions.length) return showToast('\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E2A\u0E48\u0E07\u0E2D\u0E2D\u0E01','warning'); var csv='\uFEFF\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48,\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14,\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17,\u0E2B\u0E21\u0E27\u0E14\u0E2B\u0E21\u0E39\u0E48,\u0E08\u0E33\u0E19\u0E27\u0E19\u0E40\u0E07\u0E34\u0E19,\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E1B\u0E23\u0E30\u0E08\u0E33\n'; transactions.forEach(function(t){ csv+=t.date+','+t.detail+','+(t.type==='saving'?'\u0E2D\u0E2D\u0E21\u0E40\u0E07\u0E34\u0E19':t.type==='income'?'\u0E23\u0E32\u0E22\u0E23\u0E31\u0E1A':'\u0E23\u0E32\u0E22\u0E08\u0E48\u0E32\u0E22')+','+t.category+','+t.amount+','+(t.recurring?'\u0E43\u0E0A\u0E48':'\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48')+'\n'; }); var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download='\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23.csv'; a.click(); showToast('\u0E2A\u0E48\u0E07\u0E2D\u0E2D\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08','success'); }
+// ฟังก์ชันสลับโหมด AI อัตโนมัติตามเน็ต และตรวจจับการกดสวิตช์
+function toggleAiMode() {
+  const toggle = document.getElementById('aiModeToggle');
+  const isOnlineMode = toggle.checked;
+
+  if (isOnlineMode) {
+    if (!navigator.onLine) {
+      showToast('ต้องมีอินเทอร์เน็ตเพื่อใช้งาน AI ของจริงครับ!', 'warning', 'ไม่มีเน็ต');
+      toggle.checked = false; // เด้งสวิตช์กลับ
+      return;
+    }
+    userProfile.aiMode = 'online';
+    document.getElementById('apiKeySettingItem').style.display = 'flex';
+    showToast('เปลี่ยนเป็น AI ประเมินจริง (ออนไลน์) แล้ว', 'success');
+  } else {
+    // ถ้ามีเน็ตแต่จะกดปิด ให้ขึ้นเตือน
+    showConfirm({
+      title: 'ปิดใช้งาน AI ของจริง?',
+      msg: 'ระบบจะปิด AI (Gemini) ชั่วคราว และกลับไปใช้ระบบวิเคราะห์แบบออฟไลน์',
+      type: 'warning',
+      okText: 'ปิดใช้งาน',
+      onOk: function() {
+        userProfile.aiMode = 'offline';
+        document.getElementById('apiKeySettingItem').style.display = 'none';
+        showToast('กลับสู่โหมดออฟไลน์แล้ว', 'info');
+        localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile));
+      },
+      onCancel: function() {
+        toggle.checked = true; // เด้งสวิตช์กลับไปเปิดเหมือนเดิม
+      }
+    });
+    return; // ออกก่อนเพื่อรอการกดยืนยันจาก Confirm
+  }
+  localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile));
+}
+
+function saveApiKeyUI() {
+  const key = document.getElementById('newApiKeyInput').value.trim();
+  userProfile.apiKey = key;
+  localStorage.setItem('myMoney_profile_v2', JSON.stringify(userProfile));
+  
+  if (key !== '') {
+    showToast("บันทึก API Key และเชื่อมต่อสมอง AI แล้ว!", "success");
+  } else {
+    showToast("ล้างค่า API Key แล้ว (จะกลับไปใช้ออฟไลน์)", "info");
+  }
+  closeSubSettings();
+}
+
 function init(){
+  // เช็คตอนเข้าแอป: จำค่าเดิมผู้ใช้ แต่ถ้าไม่มีเน็ตให้บังคับออฟไลน์
+  let savedMode = userProfile.aiMode || 'offline';
+  userProfile.aiMode = (navigator.onLine && savedMode === 'online') ? 'online' : 'offline';
+  
+  const aiToggle = document.getElementById('aiModeToggle');
+  if(aiToggle) aiToggle.checked = (userProfile.aiMode === 'online');
+  const keyItem = document.getElementById('apiKeySettingItem');
+  if(keyItem) keyItem.style.display = (userProfile.aiMode === 'online') ? 'flex' : 'none';
+
   var today=new Date().toISOString().split('T')[0];
+  // ... (โค้ดที่เหลือเหมือนเดิม) ...
+
   document.getElementById('dateInput').value=today; document.getElementById('savingDateInput').value=today; document.getElementById('monthHistoryInput').value=today.slice(0,7);
   applyTheme(); document.getElementById('themeToggle').checked=!!userProfile.isDark;
   updatePD(); updHdrAcc(); updCatOpts(); updBudCatOpts(); updSavUI(); procRecurring();
