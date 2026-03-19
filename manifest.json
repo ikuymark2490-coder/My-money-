@@ -1,6 +1,6 @@
 {
-  "name": "เงินฉัน - บัญชีส่วนตัว",
-  "short_name": "เงินฉัน",
+  "name": "Me Money - บัญชีส่วนตัว",
+  "short_name": "Me Money",
   "description": "แอปบันทึกรายรับรายจ่าย พร้อม AI วิเคราะห์การเงิน",
   "start_url": ".",
   "display": "standalone",
@@ -8,12 +8,12 @@
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "src": "./logo_app.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "src": "./logo_app.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
