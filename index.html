@@ -755,15 +755,33 @@ async function runAIEvaluation() {
     const cats=Object.entries(ce).sort((a,b)=>b[1]-a[1]).slice(0,3).map(c => `${c[0]} ${c[1]}฿`).join(', ');
     const promptText = `วิเคราะห์การเงิน: ผู้ใช้ชื่อ ${userProfile.name || 'คุณ'}. รับเดือนนี้ ${inc} บ., จ่าย ${exp} บ., ออม ${gsav} บ. หมวดจ่ายเยอะสุด: ${cats || 'ไม่มี'}. ขอคำแนะนำสั้นๆ 3 บรรทัด เป็นกันเอง มีอีโมจิ ชื่นชมและเตือนสติ`;
     
-    try {
+        try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userProfile.apiKey}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: promptText }]
+          }]
+        })
       });
+
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
+
+      // 🔴 เพิ่มจุดเช็ค Error ตรงนี้
+      if (data.error) {
+        console.error("AI Error Detail:", data.error);
+        if (data.error.status === "PERMISSION_DENIED") {
+            showToast("API Key ไม่ถูกต้อง หรือโดนบล็อกครับ", "danger");
+        } else {
+            showToast("AI แจ้งว่า: " + data.error.message, "warning");
+        }
+        throw new Error(data.error.message);
+      }
       
       const result = data.candidates[0].content.parts[0].text;
+      // ... (โค้ดพิมพ์ดีดที่เหลือเหมือนเดิม) ...
+
       let rank = exp > inc && inc > 0 ? "นักหมุนเงิน 🚨" : (inc > 0 && (inc-exp)/inc >= 0.3 ? "เศรษฐีหน้าใหม่ 👑" : "นักบริหารเงิน 🧠");
       
       ar.innerHTML='ยศ (AI วิเคราะห์): ' + rank;
