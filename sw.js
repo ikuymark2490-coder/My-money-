@@ -1,5 +1,5 @@
 // เปลี่ยนเลข v1 เป็น v2, v3, v4 ไปเรื่อยๆ ทุกครั้งที่มีการอัปเดต index.html
-const CACHE_NAME = 'my-money-cache-v3'; 
+const CACHE_NAME = 'my-money-cache-v4'; 
 const urlsToCache = [
   './index.html'
 ];
