@@ -778,20 +778,41 @@ function saveProfile(){
   updatePD(); closeSubSettings(); showOK(); 
 }
 
-// 3. ฟังก์ชันเรียก AI (Groq + ใส่บุคลิกตามเลือก)
+// 3. ฟังก์ชันเรียก AI (Groq + วิเคราะห์เชิงลึกแบบโปร)
 async function runAIEvaluation() {
   var btn=document.getElementById('btnRunAI'), loading=document.getElementById('aiLoading'), rb=document.getElementById('aiResultBox');
   btn.style.display='none'; rb.style.display='none'; 
   loading.style.display='block';
   
-  var cm=new Date().toISOString().slice(0,7); var inc=0,exp=0,gsav=0,ce={};
-  getCurTx().forEach(function(t){ if(t.date.startsWith(cm)){ var a=parseFloat(t.amount); if(t.type==='income') inc+=a; if(t.type==='expense'){ exp+=a; ce[t.category]=(ce[t.category]||0)+a; } if(t.type==='saving') gsav+=a; } });
+  var cm=new Date().toISOString().slice(0,7); 
+  var inc=0, exp=0, gsav=0, ce={}, netBalance=0;
+  
+  // คำนวณเงินคงเหลือทั้งหมด และรายรับรายจ่ายเดือนปัจจุบัน
+  getCurTx().forEach(function(t){ 
+    var a=parseFloat(t.amount);
+    if(t.type==='income') netBalance += a;
+    else netBalance -= a;
+
+    if(t.date.startsWith(cm)){ 
+      if(t.type==='income') inc+=a; 
+      if(t.type==='expense'){ exp+=a; ce[t.category]=(ce[t.category]||0)+a; } 
+      if(t.type==='saving') gsav+=a; 
+    } 
+  });
   
   var ar=document.getElementById('aiRankDisplay'), at=document.getElementById('aiTextDisplay');
   if(inc===0&&exp===0&&gsav===0){ 
-    ar.innerHTML='ยศ: 👻 สุญญากาศทางการเงิน'; at.innerHTML='ยังไม่มีข้อมูลเลยครับ!'; 
+    ar.innerHTML='ยศ: 👻 สุญญากาศทางการเงิน'; at.innerHTML='ยังไม่มีข้อมูลให้วิเคราะห์เลยครับ ลองบันทึกรายการก่อนนะ!'; 
     loading.style.display='none'; rb.style.display='block'; btn.style.display='flex'; return; 
   }
+
+  // เช็คว่ามีหมวดไหนใช้เกินงบที่ตั้งไว้ไหม
+  let budgetIssues = [];
+  Object.keys(budgets).forEach(cat => {
+    let spent = ce[cat] || 0;
+    if (spent > budgets[cat]) budgetIssues.push(`${cat} (เกินงบ ${spent - budgets[cat]}฿)`);
+  });
+  let budgetAlert = budgetIssues.length > 0 ? budgetIssues.join(', ') : 'คุมงบได้ดีเยี่ยม ไม่มีหมวดไหนเกินงบ';
 
   if (userProfile.aiMode === 'online' && navigator.onLine) {
     if (!userProfile.apiKey) {
@@ -801,13 +822,27 @@ async function runAIEvaluation() {
 
     const cats=Object.entries(ce).sort((a,b)=>b[1]-a[1]).slice(0,3).map(c => `${c[0]} ${c[1]}฿`).join(', ');
 
-    // --- ส่วนกำหนดบุคลิก AI ---
-    let personaPrompt = "คุณคือที่ปรึกษาการเงินผู้หญิงที่เก่ง ฉลาด มั่นใจ อธิบายเข้าใจง่ายและเป็นกันเอง";
-    if (userProfile.aiPersona === 'male_expert') personaPrompt = "คุณคือที่ปรึกษาการเงินผู้ชายที่สุขุม น่าเชื่อถือ อบอุ่น และมืออาชีพ";
-    else if (userProfile.aiPersona === 'cute_girl') personaPrompt = "คุณคือผู้ช่วยการเงินวัยรุ่นหญิงที่น่ารัก สดใส ร่าเริง มีแซวเล่นกวนๆ";
-    else if (userProfile.aiPersona === 'savage') personaPrompt = "คุณคือโค้ชการเงินสายดาร์ก ดุดัน วิจารณ์เจ็บๆ ปนตลก ตรงไปตรงมา";
+    // --- กำหนดบุคลิกให้ลึกและดูโปรขึ้น ---
+    let personaSys = "คุณคือที่ปรึกษาการเงินสาวสายโปร เก่งการลงทุน วิเคราะห์เฉียบขาด ใช้คำพูดฉลาด ดูแพง อธิบายตรงประเด็นและให้กำลังใจ";
+    if (userProfile.aiPersona === 'male_expert') personaSys = "คุณคือที่ปรึกษาการเงินหนุ่มสุดเนี๊ยบ สุขุม อบอุ่น วิเคราะห์ด้วยหลักเหตุผลและตัวเลข ให้คำแนะนำระดับผู้บริหาร";
+    else if (userProfile.aiPersona === 'cute_girl') personaSys = "คุณคือผู้ช่วยการเงินวัยรุ่นสาวสุดคิวท์ ร่าเริง สดใส แซวเก่ง ใช้ภาษาวัยรุ่น น่ารักแต่แฝงความรู้เรื่องเงินแบบเนียนๆ";
+    else if (userProfile.aiPersona === 'savage') personaSys = "คุณคือโค้ชการเงินสายดาร์ก ปากแจ๋ว ดุดัน วิจารณ์ตรงๆ แรงๆ ไม่เกรงใจใคร ด่าเพื่อบิ้วให้มีสติเรื่องเงิน ปนตลกร้าย";
 
-    const promptText = `${personaPrompt} วิเคราะห์บัญชีของชื่อ ${userProfile.name || 'คุณ'}: รับ ${inc}, จ่าย ${exp}, ออม ${gsav}. หมวดจ่ายเยอะ: ${cats}. ขอคำแนะนำสั้นๆ 3 บรรทัด มีอีโมจิ`;
+    // --- Prompt โฉมใหม่ที่อัดข้อมูลเชิงลึกให้ AI ---
+    const promptText = `คำสั่ง: สวมบทบาทเป็น "${personaSys}" 
+ข้อมูลบัญชีเดือนนี้ของผู้ใช้ชื่อ "${userProfile.name || 'คุณ'}":
+- เงินคงเหลือสุทธิ (พร้อมใช้): ${netBalance} บาท
+- รายรับเดือนนี้: ${inc} บาท
+- รายจ่ายเดือนนี้: ${exp} บาท
+- เงินออม: ${gsav} บาท
+- หมวดที่สูบเงินไปเยอะสุด: ${cats || 'ไม่มีข้อมูล'}
+- สถานะงบประมาณ: ${budgetAlert}
+
+จงวิเคราะห์ข้อมูลนี้และตอบกลับมาเป็นข้อๆ ดังนี้:
+1. วิจารณ์สถานะการเงินปัจจุบัน (เทียบรายจ่ายกับรายรับ และเงินคงเหลือ)
+2. เจาะลึกพฤติกรรมการใช้เงิน (ดูจากหมวดที่จ่ายเยอะและงบที่คุมไม่อยู่)
+3. คำแนะนำที่นำไปใช้ได้จริงสำหรับเดือนหน้า
+(ใช้โทนเสียงตามบทบาทอย่างเคร่งครัด ตอบให้ดูฉลาด มืออาชีพ ใส่ Emoji ให้สวยงาม และความยาวกระชับพอดีอ่าน ไม่เกิน 6-7 บรรทัด)`;
 
     try {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -816,7 +851,8 @@ async function runAIEvaluation() {
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
           messages: [{ role: "user", content: promptText }],
-          temperature: 0.7
+          temperature: 0.7,
+          max_tokens: 1500
         })
       });
       const data = await res.json();
@@ -829,7 +865,12 @@ async function runAIEvaluation() {
       loading.style.display='none'; rb.style.display='block';
       at.innerHTML = ""; let i = 0;
       function typeEffect() {
-        if (i < result.length) { at.innerHTML += result.charAt(i); i++; setTimeout(typeEffect, 15); }
+        if (i < result.length) { 
+          // แปลงการขึ้นบรรทัดใหม่ให้เป็นแท็ก <br>
+          at.innerHTML += result.charAt(i) === '\n' ? '<br>' : result.charAt(i); 
+          i++; 
+          setTimeout(typeEffect, 10); // พิมพ์เร็วขึ้น
+        }
         else { btn.style.display='flex'; btn.innerHTML = '✨ ให้ AI ประเมินอีกครั้ง'; }
       }
       typeEffect();
@@ -838,6 +879,7 @@ async function runAIEvaluation() {
       showToast("Groq API มีปัญหา! ใช้ระบบออฟไลน์ชั่วคราว", "warning");
     }
   }
+
   // 🔵 โหมด AI ออฟไลน์ (ระบบเดิม ทำงานเร็ว ไม่ต้องใช้เน็ต)
   setTimeout(function(){
     var cats=Object.entries(ce).sort(function(a,b){ return b[1]-a[1]; }); var th='',tcn=cats.length>0?cats[0][0]:'',tca=cats.length>0?cats[0][1]:0;
@@ -851,13 +893,14 @@ async function runAIEvaluation() {
     else{ rn='มนุษย์เดือนชนเดือน'; sp+='รายจ่ายไล่รายรับมาติดๆ แล้วนะครับ! '; }
     if(tcn&&exp>0){ var cr=Math.round((tca/exp)*100); if(cr>=30) sp+='หมวด "'+tcn+'" สูบเงินไปถึง '+cr+'% ของรายจ่ายทั้งหมดเลยครับ '; }
     if(gsav>0) sp+='ส่วนเงินหยอดกระปุก ('+gsav.toLocaleString()+' ฿) ขอให้ถึงเป้าหมายไวๆ นะครับ 🎯 ';
+    if(budgetIssues.length>0) sp+='ระวังด้วย คุณใช้เงินเกินงบไปแล้วในหมวด: '+budgetIssues.join(', ')+' ';
     if(exp>inc&&inc>0) sp+='แนะนำให้เบรกรายจ่ายที่ไม่จำเป็นด่วนครับ!';
     else if(sr>=40) sp+='เงินเหลือเยอะ ลองศึกษาการลงทุนเพิ่มเติมนะครับ 📈';
     else sp+='พยายามรักษาวินัยแบบนี้ต่อไปนะครับ!';
     var nm=userProfile.name?'<b>คุณ'+userProfile.name+'</b>':'<b>คุณ</b>';
     ar.innerHTML='ยศ (ออฟไลน์): '+rn;
     var sh=''; if(gsav>0) sh+='• หยอดกระปุก: <span style="color:var(--warning);font-weight:bold;">'+gsav.toLocaleString()+' ฿</span><br>'; else sh+='• เงินออม: <span style="color:var(--text-muted);">0 ฿</span><br>';
-    at.innerHTML='สรุปเดือนนี้ของคุณ '+nm+':<br>• รายรับ: <span class="text-success">'+inc.toLocaleString()+' ฿</span><br>• รายจ่าย: <span class="ai-highlight">'+exp.toLocaleString()+' ฿</span><br>'+sh+'• เฉลี่ย/วัน: <b>'+dAvg.toLocaleString()+' ฿</b><br><br>📊 <b>หมวดที่ใช้ดุเดือดสุด:</b>'+th+'💬 <b>คำแนะนำจากระบบ:</b><br><div id="aiTB" style="background:var(--primary-light);padding:10px;border-radius:8px;margin-top:8px;color:var(--text-main);line-height:1.5;min-height:45px;"></div>';
+    at.innerHTML='สรุปเดือนนี้ของคุณ '+nm+':<br>• คงเหลือสุทธิ: <b style="color:var(--primary);">'+netBalance.toLocaleString()+' ฿</b><br>• รายรับ: <span class="text-success">'+inc.toLocaleString()+' ฿</span><br>• รายจ่าย: <span class="ai-highlight">'+exp.toLocaleString()+' ฿</span><br>'+sh+'• เฉลี่ย/วัน: <b>'+dAvg.toLocaleString()+' ฿</b><br><br>📊 <b>หมวดที่ใช้ดุเดือดสุด:</b>'+th+'💬 <b>คำแนะนำจากระบบ:</b><br><div id="aiTB" style="background:var(--primary-light);padding:10px;border-radius:8px;margin-top:8px;color:var(--text-main);line-height:1.5;min-height:45px;"></div>';
     userProfile.rankText=rn; localStorage.setItem('myMoney_profile_v2',JSON.stringify(userProfile)); updatePD();
     loading.style.display='none'; rb.style.display='block'; btn.style.display='none';
     var tb=document.getElementById('aiTB'),tk=sp.match(/<[^>]+>|[\s\S]/g)||[],ci=0;
