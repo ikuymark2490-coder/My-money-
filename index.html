@@ -93,6 +93,31 @@ body{background-color:var(--bg-color);color:var(--text-main);padding-bottom:80px
   0%,80%,100%{transform:scaleY(1);opacity:0.5}
   40%{transform:scaleY(1.6);opacity:1}
 }
+/* 🌈 NEW: Me Money Text Animation */
+.splash-brand-text {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(90deg, #4f46e5 0%, #ec4899 50%, var(--border) 50%, var(--border) 100%);
+  background-size: 200% 100%;
+  background-position: 100% 0; 
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* ใส่ 2 แอนิเมชันพร้อมกัน: เฟดโผล่ขึ้นมาแบบนุ่มๆ + ปาดสีพร้อมหลอดโหลด */
+  animation: 
+    splashTextIn 0.5s ease 0.45s both,
+    textRevealSync 2.2s forwards cubic-bezier(0, 0.5, 0.5, 1);
+}
+
+@keyframes textRevealSync {
+  0% { background-position: 100% 0; }
+  10% { background-position: 80% 0; }
+  40% { background-position: 50% 0; }
+  70% { background-position: 15% 0; }
+  100% { background-position: 0% 0; }
+}
+
 /* ═══════════════════════════════════════ */
 
 /* TOAST */
@@ -261,9 +286,13 @@ body.dark-theme .check-wrapper{background:rgba(30,41,59,0.9);}
     </div>
     <img src="logo_app.png" class="splash-app-logo" alt="เงินฉัน"
       onerror="this.outerHTML='<div style=&quot;font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,#4f46e5,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;&quot;>เงินฉัน</div>'">
-    <div class="splash-tagline">บัญชีส่วนตัว · จัดการการเงินง่ายๆ</div>
+        <div class="splash-tagline">บัญชีส่วนตัว · จัดการการเงินง่ายๆ</div>
+    
+    <div class="splash-brand-text">Me Money</div>
+    
     <div class="splash-progress-wrap">
       <div class="splash-progress-track">
+
         <div class="splash-progress-fill" id="splashBar"></div>
       </div>
       <div class="splash-status" id="splashStatus">
@@ -428,25 +457,36 @@ body.dark-theme .check-wrapper{background:rgba(30,41,59,0.9);}
       </div>
     </div>
     <div id="tab-settings" class="tab-content">
-      <div id="settings-main">
+            <div id="settings-main">
         <h2 style="font-size:1.1rem;margin-bottom:1rem;">ตั้งค่า</h2>
-                <div class="profile-card">
+        
+        <div class="profile-card">
           <div class="profile-avatar" style="background: white; box-shadow: inset 0 0 0 1px var(--border);">
             <img src="logo.png" alt="Profile" style="width: 70%; height: 70%; object-fit: contain; border-radius: 0;" onerror="this.style.display='none';this.parentNode.innerHTML='<svg viewBox=\'0 0 24 24\'><path d=\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\'/><circle cx=\'12\' cy=\'7\' r=\'4\'/></svg>'">
           </div>
           <div class="profile-info">
-<div class="profile-name-row"><h3 class="profile-name" id="displayProfileName">ผู้ใช้งาน</h3><span class="rank-badge" id="displayProfileRank" style="display:none;"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span id="rankBadgeText"></span></span></div><p class="profile-bio" id="displayProfileBio">เป้าหมายทางการเงิน...</p></div>
+            <div class="profile-name-row">
+              <h3 class="profile-name" id="displayProfileName">ผู้ใช้งาน</h3>
+              <span class="rank-badge" id="displayProfileRank" style="display:none;">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span id="rankBadgeText"></span>
+              </span>
+            </div>
+            <p class="profile-bio" id="displayProfileBio">เป้าหมายทางการเงิน...</p>
+          </div>
         </div>
+
         <div class="settings-menu">
           <div class="settings-item" onclick="openSubSettings('settings-accounts')" style="border-left:3px solid var(--primary);"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg> จัดการบัญชี & สลับบัญชี</div><div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
           <div class="settings-item" onclick="openSubSettings('settings-edit')"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> แก้ไขโปรไฟล์</div><div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
           <div class="settings-item" onclick="openSubSettings('settings-pin')"><div class="settings-item-left"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> รหัสล็อค PIN</div><div class="settings-item-right"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
           <label class="settings-item"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> โหมดกลางคืน</div><div class="checkbox-wrapper" style="margin:0;"><input type="checkbox" id="themeToggle" onchange="toggleTheme()" style="width:20px;height:20px;"></div></label>
-          <div class="settings-item" onclick="exportData()"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg> ส่งออก CSV</div></div>
-          <div class="settings-item" onclick="document.getElementById('csvImportInput').click()"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> นำเข้า CSV</div></div>
+          <div class="settings-item" onclick="exportData()"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> ส่งออก CSV</div></div>
+          <div class="settings-item" onclick="document.getElementById('csvImportInput').click()"><div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg> นำเข้า CSV</div></div>
           <input type="file" id="csvImportInput" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
         </div>
       </div>
+
       <div id="settings-edit" style="display:none;"><div class="back-nav" onclick="closeSubSettings()"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> กลับ</div><div class="card" style="box-shadow:none;padding:0;"><h2 style="font-size:1.1rem;margin-bottom:1rem;">แก้ไขโปรไฟล์</h2><label>ชื่อผู้ใช้งาน</label><input type="text" id="profileName" placeholder="ใส่ชื่อของคุณ..." lang="th" dir="auto"><label>คำอธิบาย</label><textarea id="profileBio" rows="3" placeholder="เป้าหมายปีนี้..." lang="th" dir="auto"></textarea><button class="btn-primary" onclick="saveProfile()">บันทึก</button></div></div>
       <div id="settings-pin" style="display:none;"><div class="back-nav" onclick="closeSubSettings()"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> กลับ</div><div class="card" style="box-shadow:none;padding:0;"><h2 style="font-size:1.1rem;margin-bottom:1rem;">รหัสผ่าน (PIN)</h2><label class="checkbox-wrapper" style="margin-bottom:1.5rem;"><input type="checkbox" id="pinToggle" onchange="togglePinSetup()"><span style="font-weight:bold;">เปิดใช้งาน PIN</span></label><div id="pinSetupBox" style="display:none;padding:1rem;background:var(--bg-color);border-radius:10px;margin-bottom:1rem;"><label>ตั้งรหัส 4 หลัก</label><input type="password" id="newPinInput" placeholder="xxxx" maxlength="4" pattern="[0-9]*" inputmode="numeric" style="letter-spacing:0.5rem;text-align:center;font-size:1.2rem;font-weight:bold;"><button class="btn-primary" onclick="savePinSettings()">บันทึกรหัส</button></div></div></div>
       <div id="settings-accounts" style="display:none;">
